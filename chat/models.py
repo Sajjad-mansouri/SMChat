@@ -1,0 +1,57 @@
+from django.db import models
+from django.utils.translation import gettext_lazy as _
+from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.fields import GenericForeignKey
+UserModel = get_user_model()
+
+def group_file_path(instance, file_name):
+	return "group/profile/{user_id}/{group_id}/{year}/{month}/{day}/{file_name}".format(
+										user_id=instance.user.id,
+										group_id=instance.id, 
+										year = instance.updated.year,
+										month = instance.updated.month,
+										day = instance.updated.day,
+										file_name = file_name)
+
+class ChatGroup(models.Model):
+	GROUP_TYPE = [
+		("channel", "Channel"),
+		("group", "Group"),
+		("direct", "Direct")
+	]
+
+	STATUS_CHOICES = [
+		("public", "Public"),
+		("private", "Private")
+	]
+	user = models.ForeignKey(UserModel, on_delete=models.SET_NULL, null=True, related_name="chat_groups", verbose_name=_("user"))
+	name = models.CharField(_("name"), max_length=150, blank=True)
+	status = models.CharField(_("status"), choices=STATUS_CHOICES, max_length=10)
+	group_type = models.CharField(_("group type"), choices=GROUP_TYPE, max_length=10)
+	image = models.FileField(_("image"), upload_to=group_file_path, null=True, blank=True)
+
+	created = models.DateTimeField(auto_now_add=True)
+	updated = models.DateTimeField(auto_now=True)
+
+
+def file_path(instance, file_name):
+	return "chat/{user_id}/{group_id}/{year}/{month}/{day}/{file_name}".format(
+										user_id=instance.user.id,
+										group_id=instance.group.id, 
+										year = instance.updated.year,
+										month = instance.updated.month,
+										day = instance.updated.day,
+										file_name = file_name)
+
+
+class Chat(models.Model):
+	user = models.ForeignKey(UserModel, on_delete=models.SET_NULL, null=True, related_name="chats", verbose_name=_("user"))
+	group = models.ForeignKey(ChatGroup, on_delete=models.CASCADE, related_name="group_chats", verbose_name=_("group"))
+	reply_to = models.ForeignKey(UserModel, on_delete=models.SET_NULL, blank=True, null=True, verbose_name=_("reply to"))
+	text = models.TextField(_("text"), blank=True)
+	file = models.FileField(_("file"), upload_to=file_path, null=True, blank=True)
+	image = models.FileField(_("image"), upload_to=file_path, null=True, blank=True)
+
+	created = models.DateTimeField(auto_now_add=True)
+	updated = models.DateTimeField(auto_now=True)
+
