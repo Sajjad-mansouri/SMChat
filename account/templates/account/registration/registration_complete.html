@@ -73,7 +73,7 @@
                 Your email has been successfully confirmed and your SMchat account is now active.
                 You can now sign in and start chatting.
             </p>
-            <a href="/login/">Go to Login</a>
+            <a href="{%url 'account:login'%}">Go to Login</a>
     {%else%}
             <div style="margin-bottom:18px;">
                 <svg width="80" height="80" viewBox="0 0 100 100" fill="none">
@@ -88,7 +88,7 @@
                 This confirmation link is not valid or has already been used.
                 Please request a new confirmation email to complete your registration.
             </p>
-            <a href="/resend-email/">Resend Confirmation Email</a>
+            <a href="{%url 'account:register'%}">Register</a>
     {%endif%}
 </div>
 

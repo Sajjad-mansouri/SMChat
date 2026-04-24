@@ -163,3 +163,22 @@ class RegistrationConfirmView(PasswordContextMixin, TemplateView):
 
 class LoginView(auth_views.LoginView):
     template_name = "account/registration/login.html"
+
+
+class PasswordResetView(auth_views. PasswordResetView):
+    template_name = "account/registration/pass_reset_form.html"
+    email_template_name = "account/registration/pass_reset_email.html"
+    subject_template_name = "account/registration/pass_reset_subject.txt"
+    success_url = reverse_lazy("account:password_reset_done")
+
+
+
+class PasswordResetDoneView(auth_views.PasswordResetDoneView):
+    template_name = "account/registration/pass_reset_done.html"
+
+class PasswordResetConfirmView(auth_views.PasswordResetConfirmView):
+    template_name = "account/registration/pass_reset_confirm.html"
+    success_url = reverse_lazy("account:password_reset_complete")
+
+class PasswordResetCompleteView(auth_views.PasswordResetCompleteView):
+    template_name = "account/registration/pass_reset_complete.html"

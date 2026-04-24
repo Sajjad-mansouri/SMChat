@@ -1,3 +1,4 @@
+{%load static%}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -196,7 +197,7 @@
 
         <div class="helper">
             Already have an account?
-            <a href="/login/">Login</a>
+            <a href="{%url 'account:login'%}">Login</a>
         </div>
     </div>
 
@@ -212,11 +213,11 @@
         <p style="font-size:14px; color:#666; margin-bottom:18px;">
             You can close this page after confirming your email.
         </p>
-        <a href="/login/">Go to Login</a>
+        <a href="{%url 'account:login'%}">Go to Login</a>
     </div>
 
 </div>
-
+<script src="{%static 'js/account/base.js'%}"></script>
 <script>
     const form = document.getElementById("registerForm");
     const errorBox = document.getElementById("errorBox");
@@ -256,23 +257,13 @@
         }, 4000);
     }
 
-    async function fetchPOST(formData) {
-      const csrfToken = document.querySelector("[name=csrfmiddlewaretoken]").value
-      const response = await fetch("{{request.post}}", {
-        method:"POST",
-        headers:{
-          "X-CSRFToken":csrfToken
-        },
-        body:formData
-      })
-      const data = await response.json()
-      return data
-    }
+
 
     form.addEventListener("submit", async function (e) {
         e.preventDefault(); // remove when using real Django submission
         const formData = new FormData(form)
-        const data = await fetchPOST(formData)
+        const url = "{{request.path}}"
+        const data = await fetchPOST(url, formData)
         if(data.status){
 
         }else{
@@ -286,7 +277,7 @@
         // ---------------------------------------------------------
 
         // If no errors → show success screen
-        displayEmail.textContent = email;
+        displayEmail.textContent = formData.get("email");
         registerView.classList.add("hidden");
         emailSentView.classList.remove("hidden");
     });
