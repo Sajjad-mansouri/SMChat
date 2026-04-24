@@ -160,3 +160,6 @@ class RegistrationConfirmView(PasswordContextMixin, TemplateView):
             )
         return context
 
+
+class LoginView(auth_views.LoginView):
+    template_name = "account/registration/login.html"
