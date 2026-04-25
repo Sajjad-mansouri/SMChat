@@ -1,0 +1,62 @@
+{%load static%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>FlowChat — Premium Messenger</title>
+  <link rel="stylesheet" type="text/css" href="{%static 'css/chat/main.css'%}">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <button class="hamburger-btn" id="hamburgerBtn">
+        <svg class="hamburger-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <div class="sidebar-search">
+        <svg width="18" viewBox="0 0 24 24" fill="none" stroke="#64748b"><path d="M21 21l-4.35-4.35M19 11a8 8 0 1 0-16 0 8 8 0 0 0 16 0z" stroke-width="1.6"/></svg>
+        <input type="text" id="globalSearch" placeholder="Search chats...">
+      </div>
+    </div>
+    <div class="nav-pills">
+      <div class="nav-pill active" data-nav="private">Private</div>
+      <div class="nav-pill" data-nav="groups">Groups</div>
+      <div class="nav-pill" data-nav="channels">Channels</div>
+    </div>
+    <div class="chats-list" id="chatsList">
+
+  </div>
+  </aside>
+
+
+</div>
+
+<!-- Slide-out menu -->
+<div class="drawer-overlay" id="drawerOverlay"></div>
+<div class="drawer" id="drawerMenu">
+  <div class="drawer-profile">
+    <div class="drawer-avatar" id="drawerAvatarImg">AJ</div>
+    <div class="drawer-username" id="drawerUsername">Alex Johnson</div>
+    <button class="change-photo-btn" id="changePhotoBtn">Change photo</button>
+    <input type="file" id="avatarUploadInput" style="display:none" accept="image/*">
+  </div>
+  <div class="drawer-divider"></div>
+  <div class="drawer-links">
+    <div class="drawer-item" id="drawerAccountBtn">
+      <svg width="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zM20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke-width="1.6"/></svg>
+      Account
+    </div>
+    <div class="drawer-item logout-item" id="logoutBtnDrawer">
+      <svg width="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l4-4-4-4M12 13h8" stroke-width="1.6"/></svg>
+      Logout
+    </div>
+  </div>
+</div>
+
+<script src="{%static 'js/chat/main.js'%}"></script>
+
+</body>
+</html>
