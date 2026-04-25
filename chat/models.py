@@ -13,7 +13,7 @@ def group_file_path(instance, file_name):
 										day = instance.updated.day,
 										file_name = file_name)
 
-class ChatGroup(models.Model):
+class Conversation(models.Model):
 	GROUP_TYPE = [
 		("channel", "Channel"),
 		("group", "Group"),
@@ -24,14 +24,26 @@ class ChatGroup(models.Model):
 		("public", "Public"),
 		("private", "Private")
 	]
-	user = models.ForeignKey(UserModel, on_delete=models.SET_NULL, null=True, related_name="chat_groups", verbose_name=_("user"))
+	created_by = models.ForeignKey(UserModel, on_delete=models.SET_NULL, null=True, related_name="chat_groups", verbose_name=_("user"))
 	name = models.CharField(_("name"), max_length=150, blank=True)
 	status = models.CharField(_("status"), choices=STATUS_CHOICES, max_length=10)
 	group_type = models.CharField(_("group type"), choices=GROUP_TYPE, max_length=10)
-	image = models.FileField(_("image"), upload_to=group_file_path, null=True, blank=True)
+	image = models.ImageField(_("image"), upload_to=group_file_path, null=True, blank=True)
+	is_active = models.BooleanField(default=True)
 
 	created = models.DateTimeField(auto_now_add=True)
 	updated = models.DateTimeField(auto_now=True)
+
+class ConversationMember(models.Model):
+	MEMBER_ROLES = (
+		('owner', 'Owner'),
+		('admin', 'Admin'),
+		('member', 'Member'),
+	)
+	conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name='members', verbose_name=_("conversation"))
+	user = models.ForeignKey(UserModel, on_delete=models.CASCADE, related_name='conversations',verbose_name= _("user"))
+	role = models.CharField(_("role"), max_length=20, choices=MEMBER_ROLES, default='member')
+	joined_at = models.DateTimeField(auto_now_add=True)
 
 
 def file_path(instance, file_name):
@@ -46,7 +58,7 @@ def file_path(instance, file_name):
 
 class Chat(models.Model):
 	user = models.ForeignKey(UserModel, on_delete=models.SET_NULL, null=True, related_name="chats", verbose_name=_("user"))
-	group = models.ForeignKey(ChatGroup, on_delete=models.CASCADE, related_name="group_chats", verbose_name=_("group"))
+	conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, null=True, related_name="group_chats", verbose_name=_("group"))
 	reply_to = models.ForeignKey(UserModel, on_delete=models.SET_NULL, blank=True, null=True, verbose_name=_("reply to"))
 	text = models.TextField(_("text"), blank=True)
 	file = models.FileField(_("file"), upload_to=file_path, null=True, blank=True)
@@ -55,3 +67,10 @@ class Chat(models.Model):
 	created = models.DateTimeField(auto_now_add=True)
 	updated = models.DateTimeField(auto_now=True)
 
+
+
+class MessageRead(models.Model):
+	message = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='read_by', verbose_name=_("message"))
+	user = models.ForeignKey(UserModel, on_delete=models.CASCADE, verbose_name=_("user"))
+	read_at = models.DateTimeField(auto_now_add=True)
+	

@@ -1,5 +1,5 @@
 from rest_framework.serializers import ModelSerializer
-from chat.models import ChatGroup
+from chat.models import Conversation
 
 
 
@@ -8,5 +8,5 @@ class ChatGroupSerializer(ModelSerializer):
 		print('init',kwargs, args)
 		super().__init__(*args, **kwargs)
 	class Meta:
-		model = ChatGroup
+		model = Conversation
 		fields = "__all__"

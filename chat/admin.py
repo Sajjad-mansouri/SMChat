@@ -1,7 +1,7 @@
 from django.contrib import admin
-from .models import ChatGroup, Chat
+from .models import Conversation, Chat
 
 
-admin.site.register(ChatGroup)
+admin.site.register(Conversation)
 admin.site.register(Chat)
 
