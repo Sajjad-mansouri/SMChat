@@ -1,3 +1,4 @@
+{%load static%}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -133,7 +134,7 @@
             <input type="password" id="password" name="password">
         </div>
 
-        <button class="btn" type="submit">Log In</button>
+        <button class="btn" type="submit" onclick="login()">Log In</button>
     </form>
 
     <div class="options">
@@ -142,9 +143,23 @@
         <a href="{%url 'account:register'%}">Register</a>
     </div>
 </div>
+<script src="{%static 'js/authentication/auth.js'%}"></script>
 
 <script>
 
+async function login() {
+    event.preventDefault()
+    const username = document.getElementById("username").value
+    const password = document.getElementById("password").value
+
+    const auth = new Auth()
+    const data = await auth.login(username, password)
+    if(data.ok){
+        window.location.href="{%url 'chat:index'%}"
+    }
+    
+
+}
 </script>
 
 </body>

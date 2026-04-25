@@ -139,14 +139,20 @@ EMAIL_BACKEND = config('EMAIL_BACKEND')
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES':(
-            'rest_framework_simplejwt.authentication.JWTAuthentication'
+            'rest_framework_simplejwt.authentication.JWTAuthentication',
         )
 }
 
 from datetime import timedelta
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
 }
+
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8000",  # Your frontend URL
+    "http://127.0.0.1:8000",
+]
