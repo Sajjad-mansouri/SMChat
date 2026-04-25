@@ -41,7 +41,11 @@ INSTALLED_APPS = [
 
     #my apps
     'account',
-    'chat'
+    'chat',
+
+    #third party
+    'rest_framework',
+    'rest_framework_simplejwt',
 ]
 
 MIDDLEWARE = [
@@ -131,3 +135,18 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MEDIA_ROOT='media'
 MEDIA_URL = 'media/'
 EMAIL_BACKEND = config('EMAIL_BACKEND')
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES':(
+            'rest_framework_simplejwt.authentication.JWTAuthentication'
+        )
+}
+
+from datetime import timedelta
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+}
