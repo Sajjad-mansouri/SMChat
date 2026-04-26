@@ -8,6 +8,7 @@ class Conversations(ListAPIView):
 	serializer_class = ConversationSerializer
 	permission_classes = [IsAuthenticated]
 	def get_queryset(self):
+		print('user',self.request.user)
 		conversation_type = self.kwargs.get("conversation_type", "private")
 		q = Q(group_type=conversation_type) & Q(members__user=self.request.user) 
 		qs = Conversation.objects.filter(q).prefetch_related("members__user")
@@ -33,7 +34,7 @@ class ConversationDetail(RetrieveAPIView):
 	serializer_class = ConversationWithMessageSerializer
 	permission_classes = [IsAuthenticated]
 	def get_queryset(self):
-
+		print(self.request.user)
 		qs = Conversation.objects.all()
 
 		return qs

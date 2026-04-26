@@ -52,6 +52,7 @@ class Auth {
 		})
 		try {
 			const response = await this.fetchPost(tokenUrl, body)
+			console.log(response)
 			if (!response.ok) {
 
 				return {
@@ -65,7 +66,6 @@ class Auth {
 
 			return {
 				"ok": true,
-				"data": response.json()
 			}
 		} catch (error) {
 			return {

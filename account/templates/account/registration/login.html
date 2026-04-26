@@ -154,6 +154,7 @@ async function login() {
 
     const auth = new Auth()
     const data = await auth.login(username, password)
+    console.log(data)
     if(data.ok){
         window.location.href="{%url 'chat:index'%}"
     }
