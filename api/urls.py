@@ -12,7 +12,7 @@ urlpatterns = [
 	path("token/verify/", TokenVerifyView.as_view(), name="token_verify"),
 
 
-	path("index/", views.Index.as_view(), name="Index"),
+	path("conversation/<slug:conversation_type>/", views.Index.as_view(), name="Index"),
 
 
 

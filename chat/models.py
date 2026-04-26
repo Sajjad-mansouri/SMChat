@@ -5,9 +5,8 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 UserModel = get_user_model()
 
 def group_file_path(instance, file_name):
-	return "group/profile/{user_id}/{group_id}/{year}/{month}/{day}/{file_name}".format(
-										user_id=instance.user.id,
-										group_id=instance.id, 
+	return "group/profile/{conversation_id}/{year}/{month}/{day}/{file_name}".format(
+										conversation_id=instance.id, 
 										year = instance.updated.year,
 										month = instance.updated.month,
 										day = instance.updated.day,
@@ -24,7 +23,7 @@ class Conversation(models.Model):
 		("public", "Public"),
 		("private", "Private")
 	]
-	created_by = models.ForeignKey(UserModel, on_delete=models.SET_NULL, null=True, related_name="chat_groups", verbose_name=_("user"))
+	created_by = models.ForeignKey(UserModel, on_delete=models.SET_NULL, null=True, related_name="chat_groups", verbose_name=_("created by"))
 	name = models.CharField(_("name"), max_length=150, blank=True)
 	status = models.CharField(_("status"), choices=STATUS_CHOICES, max_length=10)
 	group_type = models.CharField(_("group type"), choices=GROUP_TYPE, max_length=10)
@@ -33,6 +32,16 @@ class Conversation(models.Model):
 
 	created = models.DateTimeField(auto_now_add=True)
 	updated = models.DateTimeField(auto_now=True)
+
+	def __str__(self):
+		return f"{self.id}{self.group_type} conversation by {self.created_by}"
+
+	def get_image(self):
+		if self.image:
+			return self.image.url
+
+		else:
+			return ""
 
 class ConversationMember(models.Model):
 	MEMBER_ROLES = (
@@ -45,7 +54,8 @@ class ConversationMember(models.Model):
 	role = models.CharField(_("role"), max_length=20, choices=MEMBER_ROLES, default='member')
 	joined_at = models.DateTimeField(auto_now_add=True)
 
-
+	def __str__(self):
+		return f"{self.user} in {self.conversation}"
 def file_path(instance, file_name):
 	return "chat/{user_id}/{group_id}/{year}/{month}/{day}/{file_name}".format(
 										user_id=instance.user.id,

@@ -29,3 +29,9 @@ class Profile(models.Model):
 	class Meta:
 		verbose_name = _("Profile")
 		verbose_name_plural = _("Profiles")
+
+	def get_image(self):
+		if self.profile_image:
+			return self.profile_image.url
+		else:
+			return ""
