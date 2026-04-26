@@ -1,10 +1,10 @@
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from chat.models import Conversation, ConversationMember, Chat
 from django.db.models import Q, Value
-from .serializers import ConversationSerializer
+from .serializers import ConversationSerializer, ConversationWithMessageSerializer
 
-class Index(ListAPIView):
+class Conversations(ListAPIView):
 	serializer_class = ConversationSerializer
 	permission_classes = [IsAuthenticated]
 	def get_queryset(self):
@@ -27,3 +27,14 @@ class Index(ListAPIView):
 		context = super().get_serializer_context()
 		context["blah"] = "blah"
 		return context
+
+
+class ConversationDetail(RetrieveAPIView):
+	serializer_class = ConversationWithMessageSerializer
+	permission_classes = [IsAuthenticated]
+	def get_queryset(self):
+
+		qs = Conversation.objects.all()
+
+		return qs
+
