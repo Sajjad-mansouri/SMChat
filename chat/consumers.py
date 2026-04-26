@@ -33,7 +33,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
 		message=json.loads(text_data)
 
-		message["user"] = self.user.id
+		message["user_id"] = self.user.id
+		message["username"] = self.user.username
 
 		message["created_at"] = timestamp = timezone.now().isoformat()
 		date_str=message['timestamp']
