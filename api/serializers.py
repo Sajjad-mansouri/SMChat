@@ -50,4 +50,9 @@ class ConversationWithMessageSerializer(serializers.ModelSerializer):
 		ret = super().to_representation(instance)
 		request = self.context["request"]
 		ret["current_user"] = request.user.id
+		ret["profile_id"] = request.user.id
+		ret["profile_username"] = instance.member.username
+		ret["profile_full_name"] = instance.member.get_full_name()
+
+
 		return ret

@@ -9,10 +9,9 @@ class Conversations(ListAPIView):
 	permission_classes = [IsAuthenticated]
 	def get_queryset(self):
 		print('user',self.request.user)
-		conversation_type = self.kwargs.get("conversation_type", "private")
+		conversation_type = self.kwargs.get("conversation_type", "direct")
 		q = Q(group_type=conversation_type) & Q(members__user=self.request.user) 
 		qs = Conversation.objects.filter(q).prefetch_related("members__user")
-		qs = qs.annotate(last_message=Value(""))
 		for conversation in qs:
 
 			other_members = conversation.members.exclude(user=self.request.user)
@@ -35,7 +34,15 @@ class ConversationDetail(RetrieveAPIView):
 	permission_classes = [IsAuthenticated]
 	def get_queryset(self):
 		print(self.request.user)
-		qs = Conversation.objects.all()
+		qs = Conversation.objects.filter(group_type="direct")
 
 		return qs
 
+	def get_object(self):
+		obj = super().get_object()
+
+		obj.member = obj.members.exclude(user=self.request.user).distinct()[0].user
+		members = obj.members.exclude(user=self.request.user).distinct()
+		if members:
+			obj.member = members[0].user
+		return obj
