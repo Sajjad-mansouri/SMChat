@@ -4,9 +4,11 @@ from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.utils import timezone
 from django.core import serializers
+from django.shortcuts import aget_object_or_404
 
 from asgiref.sync import sync_to_async
 import json
+from .models import Chat, Conversation
 
 User=get_user_model()
 
@@ -39,8 +41,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
 		message["created_at"] = timestamp = timezone.now().isoformat()
 		date_str=message['timestamp']
 		content=message['message']
-		# receiver=message['receiver']
 
+		conversation = await aget_object_or_404(Conversation, id=self.room_name)
+		
+		await Chat.objects.acreate(user=self.user, conversation=conversation, text=content)
 		
 
 		await self.channel_layer.group_send(
