@@ -19,7 +19,10 @@ class Conversations(ListAPIView):
 			conversation.other_users = [other_member.user for other_member in other_members]
 			# conversation.last_message = conversation.chats.first()
 			if Chat.objects.filter(conversation=conversation).exists():
+				print(Chat.objects.filter(conversation=conversation).exists(), Chat.objects.filter(conversation=conversation))
 				conversation.last_message = Chat.objects.filter(conversation=conversation).last().text
+			else:
+				conversation.last_message = ""
 
 		return qs
 

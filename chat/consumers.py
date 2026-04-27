@@ -32,23 +32,19 @@ class ChatConsumer(AsyncWebsocketConsumer):
 			)
 
 	async def receive(self, text_data=None, bytes_data=None):
-
 		message=json.loads(text_data)
-
-		message["user_id"] = self.user.id
-		message["username"] = self.user.username
-
+		#add extra info to messages that user send and send with these extra info to group
+		message["sender_id"] = self.user.id
+		message["sender_username"] = self.user.username
 		message["created_at"] = timestamp = timezone.now().isoformat()
-		date_str=message['timestamp']
-		content=message['message']
-
-		conversation = await aget_object_or_404(Conversation, id=self.room_name)
-		
-		await Chat.objects.acreate(user=self.user, conversation=conversation, text=content)
-		
-
+		if message.get("messageType") == "message":
+			content=message['message']
+			conversation = await aget_object_or_404(Conversation, id=self.room_name)
+			
+			await Chat.objects.acreate(user=self.user, conversation=conversation, text=content)
+		group_name = f"chat_{message['conversationId']}"
 		await self.channel_layer.group_send(
-			self.group_name,{
+			group_name,{
 			'type':'send.message',
 			'message':message
 			}
