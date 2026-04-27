@@ -34,20 +34,20 @@ class Conversations(ListAPIView):
 
 class ConversationDetail(RetrieveAPIView):
 	serializer_class = ConversationWithMessageSerializer
-	permission_classes = [IsAuthenticated]
+	# permission_classes = [IsAuthenticated]
 	def get_queryset(self):
-		print(self.request.user)
-		qs = Conversation.objects.filter(group_type="direct")
+		pk = self.kwargs.get("pk")
+		qs = Conversation.objects.filter(pk=pk)
 
 		return qs
 
 	def get_object(self):
 		obj = super().get_object()
-
-		obj.member = obj.members.exclude(user=self.request.user).distinct()[0].user
-		members = obj.members.exclude(user=self.request.user).distinct()
-		if members:
-			obj.member = members[0].user
+		if obj.group_type == "direct":
+			obj.member = obj.members.exclude(user=self.request.user).distinct()[0].user
+			members = obj.members.exclude(user=self.request.user).distinct()
+			if members:
+				obj.member = members[0].user
 		return obj
 
 class ConversationCreateView(CreateAPIView):
