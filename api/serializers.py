@@ -16,27 +16,37 @@ class MessageSerializer(serializers.ModelSerializer):
 		fields = ["id", "user", "text", "created"]
 
 class ConversationSerializer(serializers.ModelSerializer):
-	
+	conversation_name = serializers.SerializerMethodField()
+	conversation_image = serializers.SerializerMethodField()
+	last_message = serializers.SerializerMethodField()
 
 	class Meta:
 		model = Conversation
-		fields = ["id", "created_by", "group_type", "group_chats"]
+		fields = ["id", "name","conversation_name", "conversation_image","last_message","created_by", "group_type", "group_chats"]
+		read_only_fields = ["id", "conversation_image", "last_message", "group_chats","created_by"]
 
-	def to_representation(self, instance):
-		request = self.context["request"]
-		ret = super().to_representation(instance)
-		print(ret)
-		if instance.group_type == "direct":
-			ret["conversation_name"] = [other_user.email for other_user in instance.other_users]
-			ret["conversation_image"] = [other_user.profile.get_image() for other_user in instance.other_users]
+	def get_conversation_name(self, obj):
+		if obj.group_type == "direct":
+			return [other_user.email for other_user in obj.other_users]
 		else:
-			ret["conversation_name"] = instance.name
-			ret["conversation_image"] = instance.get_image()
+			return obj.name
 
-		ret["last_message"] = instance.last_message
+	def get_conversation_image(self, obj):
+		if obj.group_type == "direct":
+			return [other_user.profile.get_image() for other_user in obj.other_users]
+		else:
+			return obj.get_image()
 
-		return ret
+	def get_last_message(self, obj):
+		if hasattr(obj, 'last_message'):
+			return obj.last_message
+		return
 
+	def to_internal_value(self, data):
+		request = self.context["request"]
+		data = data.copy()
+		data["created_by"] = request.user
+		return data
 
 
 class ConversationWithMessageSerializer(serializers.ModelSerializer):

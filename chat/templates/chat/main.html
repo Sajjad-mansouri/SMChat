@@ -45,6 +45,10 @@
   </div>
   <div class="drawer-divider"></div>
   <div class="drawer-links">
+    <div class="drawer-item create-item" id="createGroupChannelBtn">
+      <svg width="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14" stroke-width="1.6"/><circle cx="12" cy="12" r="10"/></svg>
+      Create Group / Channel
+    </div>
     <div class="drawer-item" id="drawerAccountBtn">
       <svg width="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zM20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke-width="1.6"/></svg>
       Account
@@ -55,7 +59,30 @@
     </div>
   </div>
 </div>
+<!-- Create Group/Channel Modal -->
+<div class="create-modal-overlay" id="createModalOverlay">
+  <div class="create-modal">
+    <div class="create-modal-header">✨ New Space</div>
+    <div class="create-modal-body">
+      <div class="create-input-group">
+        <label>Type</label>
+        <select id="createTypeSelect">
+          <option value="group">👥 Group</option>
+          <option value="channel">📢 Channel</option>
+        </select>
+      </div>
+      <div class="create-input-group">
+        <label>Name</label>
+        <input type="text" id="createNameInput" placeholder="e.g., Design Team, Announcements" autocomplete="off">
+      </div>
 
+      <div class="create-actions">
+        <button class="create-cancel" id="cancelCreateBtn">Cancel</button>
+        <button class="create-submit" id="submitCreateBtn">Create →</button>
+      </div>
+    </div>
+  </div>
+</div>
 <script src="{%static 'js/authentication/auth.js'%}"></script>
 <script src="{%static 'js/chat/chat_socket.js'%}"></script>
 

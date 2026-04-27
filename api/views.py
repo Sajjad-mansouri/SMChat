@@ -1,4 +1,4 @@
-from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView
 from rest_framework.permissions import IsAuthenticated
 from chat.models import Conversation, ConversationMember, Chat
 from django.db.models import Q, Value
@@ -10,7 +10,7 @@ class Conversations(ListAPIView):
 	def get_queryset(self):
 		print('user',self.request.user)
 		conversation_type = self.kwargs.get("conversation_type", "direct")
-		q = Q(group_type=conversation_type) & Q(members__user=self.request.user) 
+		q = Q(group_type=conversation_type) & Q(created_by=self.request.user) 
 		qs = Conversation.objects.filter(q).prefetch_related("members__user")
 		for conversation in qs:
 
@@ -49,3 +49,7 @@ class ConversationDetail(RetrieveAPIView):
 		if members:
 			obj.member = members[0].user
 		return obj
+
+class ConversationCreateView(CreateAPIView):
+	serializer_class = ConversationSerializer
+	# permission_classes = [IsAuthenticated]
