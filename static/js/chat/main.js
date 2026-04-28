@@ -224,3 +224,35 @@ async function createConversation(createNameInputValue, createTypeSelectValue) {
   return response.json()
 
 }
+
+
+document.getElementById("globalSearch").addEventListener("input", async (event) => {
+  const container = document.getElementById("chatsList");
+  container.innerText = ""
+  search = event.target.value.trim()
+
+  if (search != "") {
+
+    const response = await auth.authenticatedRequest(`api/search/?search=${search}`, null, "GET")
+    const data = await response.json()
+    document.querySelectorAll(".nav-pill").forEach(element => {
+      element.classList.add("hidden")
+    })
+    document.querySelector(".search-nav").classList.remove("hidden")
+    Object.entries(data).forEach(([key, values]) => {
+      values.forEach(value => {
+        populateNavConversations(container, value)
+
+      })
+
+    })
+  } else {
+
+    document.querySelectorAll(".nav-pill").forEach(element => {
+      element.classList.remove("hidden")
+    })
+    document.querySelector(".search-nav").classList.add("hidden")
+
+    document.querySelector(".nav-pill[data-nav='direct']").click()
+  }
+})

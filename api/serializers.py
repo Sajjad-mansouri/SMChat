@@ -5,9 +5,18 @@ from chat.models import Conversation, Chat
 UserModel = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
+	conversation_name = serializers.SerializerMethodField()
+	conversation_image = serializers.SerializerMethodField()
+
 	class Meta:
 		model = UserModel
-		fields = ["id", "username"]
+		fields = ["id", "username", "conversation_name", "conversation_image"]
+	def get_conversation_name(self, obj):
+			return obj.username
+
+	def get_conversation_image(self, obj):
+
+			return obj.profile.get_image()
 
 class MessageSerializer(serializers.ModelSerializer):
 	user = UserSerializer(read_only=True)
