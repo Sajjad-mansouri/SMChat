@@ -94,8 +94,9 @@ class ConversationSerializer(serializers.ModelSerializer):
 		member_users = [validated_data["created_by"]]
 		try:
 			user_id = validated_data.pop('member_user')
-			user = get_object_or_404(UserModel, id=user_id)
-			member_users.append(user)
+			if user_id:
+				user = get_object_or_404(UserModel, id=user_id)
+				member_users.append(user)
 
 		except KeyError:
 			pass
