@@ -3,9 +3,10 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db.models import Q, Value
+from django.contrib.auth import get_user_model
 from .serializers import ConversationSerializer, ConversationWithMessageSerializer, UserSerializer
 from chat.models import Conversation, ConversationMember, Chat
-from django.contrib.auth import get_user_model
+from .permissions import IsMember
 
 
 UserModel = get_user_model()
@@ -14,8 +15,10 @@ class Conversations(ListAPIView):
 	permission_classes = [IsAuthenticated]
 	def get_queryset(self):
 		conversation_type = self.kwargs.get("conversation_type")
-		q = Q(created_by=self.request.user) & Q(group_type=conversation_type)
-		qs = Conversation.objects.filter(q).prefetch_related("members__user")
+		q1 = Q(created_by=self.request.user) & Q(group_type=conversation_type)
+		q2 = Q(members__user=self.request.user) & Q(group_type=conversation_type)
+		q = q1|q2
+		qs = Conversation.objects.filter(q).distinct().prefetch_related("members__user")
 		for conversation in qs:
 
 			other_members = conversation.members.exclude(user=self.request.user)
@@ -23,7 +26,6 @@ class Conversations(ListAPIView):
 			conversation.other_users = [other_member.user for other_member in other_members]
 			# conversation.last_message = conversation.chats.first()
 			if Chat.objects.filter(conversation=conversation).exists():
-				print(Chat.objects.filter(conversation=conversation).exists(), Chat.objects.filter(conversation=conversation))
 				conversation.last_message = Chat.objects.filter(conversation=conversation).last().text
 			else:
 				conversation.last_message = ""
@@ -35,26 +37,46 @@ class Conversations(ListAPIView):
 
 class ConversationDetail(RetrieveAPIView):
 	serializer_class = ConversationWithMessageSerializer
-	# permission_classes = [IsAuthenticated]
+	permission_classes = [IsAuthenticated, IsMember]
 	def get_queryset(self):
-		pk = self.kwargs.get("pk")
-		qs = Conversation.objects.filter(pk=pk)
+		self.conversation_id = self.kwargs.get("conversation_id")
+		self.user_id = self.kwargs.get("user_id")
+		self.conversation_type = self.kwargs.get("conversation_type")
 
-		return qs
+
+		if self.conversation_type == "direct" and self.user_id:
+				self.lookup_url_kwarg = "user_id"
+				return UserModel.objects.all()
+		else:
+			self.lookup_url_kwarg = "conversation_id"
+			return Conversation.objects.all()
+
+
 
 	def get_object(self):
-		obj = super().get_object()
-		if obj.group_type == "direct":
-			obj.member = obj.members.exclude(user=self.request.user).distinct()[0].user
-			members = obj.members.exclude(user=self.request.user).distinct()
-			if members:
-				obj.member = members[0].user
-		return obj
+		self.obj = super().get_object()
+
+		if self.conversation_type == "direct":
+			if self.conversation_id:
+				members = self.obj.members.exclude(user=self.request.user).distinct()
+				self.obj.member = members[0].user
+
+		return self.obj
+
+	def get_serializer_class(self):
+		if isinstance(self.obj, UserModel):
+			return UserSerializer
+		else:
+			return ConversationWithMessageSerializer
+
+
 
 class ConversationCreateView(CreateAPIView):
 	serializer_class = ConversationSerializer
-	# permission_classes = [IsAuthenticated]
-
+	permission_classes = [IsAuthenticated]
+	def perform_create(self, serializer):
+		serializer.save()
+		ConversationMember.objects.create(conversation=serializer.instance, user=self.request.user)
 class SearchView(APIView):
 	permission_classes = [IsAuthenticated]
 

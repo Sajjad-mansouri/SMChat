@@ -7,16 +7,25 @@ UserModel = get_user_model()
 class UserSerializer(serializers.ModelSerializer):
 	conversation_name = serializers.SerializerMethodField()
 	conversation_image = serializers.SerializerMethodField()
+	group_type = serializers.SerializerMethodField()
+	bio = serializers.SerializerMethodField()
+
+
 
 	class Meta:
 		model = UserModel
-		fields = ["id", "username", "conversation_name", "conversation_image"]
+		fields = ["id", "username", "conversation_name", "conversation_image", "group_type", "bio",]
 	def get_conversation_name(self, obj):
 			return obj.username
 
 	def get_conversation_image(self, obj):
-
 			return obj.profile.get_image()
+
+	def get_group_type(self, obj):
+		return "direct"
+
+	def get_bio(self, obj):
+		return obj.profile.bio
 
 class MessageSerializer(serializers.ModelSerializer):
 	user = UserSerializer(read_only=True)
@@ -25,18 +34,19 @@ class MessageSerializer(serializers.ModelSerializer):
 		fields = ["id", "user", "text", "created"]
 
 class ConversationSerializer(serializers.ModelSerializer):
+	conversation_id = serializers.SerializerMethodField()
 	conversation_name = serializers.SerializerMethodField()
 	conversation_image = serializers.SerializerMethodField()
 	last_message = serializers.SerializerMethodField()
 
 	class Meta:
 		model = Conversation
-		fields = ["id", "name","conversation_name", "conversation_image","last_message","created_by", "group_type", "group_chats"]
-		read_only_fields = ["id", "conversation_image", "last_message", "group_chats","created_by"]
+		fields = ["conversation_id", "name","conversation_name", "bio", "conversation_image","last_message","created_by", "group_type", "group_chats"]
+		read_only_fields = ["conversation_id", "bio","conversation_image", "last_message", "group_chats","created_by"]
 
 	def get_conversation_name(self, obj):
 		if obj.group_type == "direct":
-			return [other_user.email for other_user in obj.other_users]
+			return [other_user.email for other_user in obj.other_users if other_user]
 		else:
 			return obj.name
 
@@ -51,44 +61,45 @@ class ConversationSerializer(serializers.ModelSerializer):
 			return obj.last_message
 		return
 
+	def get_conversation_id(self, obj):
+
+			return obj.id
+
 	def to_internal_value(self, data):
-		request = self.context["request"]
 		data = data.copy()
-		data["created_by"] = request.user.id
+		request = self.context["request"]
+		data["created_by"] = request.user
 		return data
 
 
 class ConversationWithMessageSerializer(serializers.ModelSerializer):
 	group_chats = MessageSerializer(many=True, read_only=True)
 	current_user = serializers.SerializerMethodField()
-	profile_id = serializers.SerializerMethodField()
-	profile_username = serializers.SerializerMethodField()
-	profile_full_name = serializers.SerializerMethodField()
+	conversation_name = serializers.SerializerMethodField()
+	conversation_id = serializers.SerializerMethodField()
+
 
 
 	class Meta:
 		model = Conversation
-		fields = ["id", "created_by", "group_type", "group_chats", "name", "current_user", "profile_id", "profile_username", "profile_full_name"]
+		fields = [
+		"id", "created_by", "group_type", "bio",
+		"group_chats", "name", "current_user", 
+		"conversation_id", "conversation_name"]
 
 
 	def get_current_user(self, obj):
 		request = self.context["request"]
 		return request.user.id
 
-	def get_profile_username(self, obj):
+	def get_conversation_name(self, obj):
 		if obj.group_type == "direct":
+			if isinstance(obj, UserModel):
+				return obj.username
 			return obj.member.username
 		else:
 			return obj.name
 
-	def get_profile_id(self, obj):
-		if obj.group_type == "direct":
-			return obj.member.id
-		else:
-			return obj.name
 
-	def get_profile_full_name(self, obj):
-		if obj.group_type == "direct":
-			return obj.member.get_full_name()
-		else:
-			return ""
+	def get_conversation_id(self, obj):
+		return obj.id

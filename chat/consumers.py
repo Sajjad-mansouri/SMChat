@@ -33,22 +33,41 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
 	async def receive(self, text_data=None, bytes_data=None):
 		message=json.loads(text_data)
+
+		conversation_id = message['conversationId']
+		print(conversation_id)
+		conversation = await aget_object_or_404(Conversation, id=conversation_id)
+		condition = await sync_to_async(self.get_message_condition)(conversation)
+		if condition:
+			await self.create_message(message)
+			message = await self.add_extra_value(message)
+
+			group_name = f"chat_{message['conversationId']}"
+			await self.channel_layer.group_send(
+				group_name,{
+				'type':'send.message',
+				'message':message
+				}
+			)
+
+	async def create_message(self, message):
+		if message.get("messageType") == "message":
+			content=message['message']
+			
+			conversation = await aget_object_or_404(Conversation, id=self.room_name)
+			await Chat.objects.acreate(user=self.user, conversation=conversation, text=content)
+
+	def get_message_condition(self, conversation):
+		print(conversation.group_type, conversation.created_by)
+		return (conversation.group_type == "channel" and conversation.created_by==self.user) or conversation.group_type in ["group", "direct"]
+
+	async def add_extra_value(self, message):
 		#add extra info to messages that user send and send with these extra info to group
 		message["sender_id"] = self.user.id
 		message["sender_username"] = self.user.username
 		message["created_at"] = timestamp = timezone.now().isoformat()
-		if message.get("messageType") == "message":
-			content=message['message']
-			conversation = await aget_object_or_404(Conversation, id=self.room_name)
-			
-			await Chat.objects.acreate(user=self.user, conversation=conversation, text=content)
-		group_name = f"chat_{message['conversationId']}"
-		await self.channel_layer.group_send(
-			group_name,{
-			'type':'send.message',
-			'message':message
-			}
-		)
+
+		return message
 
 	async def send_message(self,event):
 		# {'type': 'send_message', 'message': {'message': '12'}}

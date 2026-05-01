@@ -37,7 +37,6 @@ async function getConversation(dataNav) {
     throw new Error("Faild to get groups!")
   }
   const data = await response.json()
-  console.log(data)
   data.forEach(item => {
     populateNavConversations(container, item)
   })
@@ -45,8 +44,11 @@ async function getConversation(dataNav) {
 }
 
 function populateNavConversations(container, item) {
-  const chat = `<div class="chat-item" data-id="${item.id}" data-name="${item.conversation_name}" onclick="openChat()">
-        <div class="chat-avatar" data-id="${item.id}" data-name="${item.conversation_name}">
+  const userId = item.group_type == "direct" ? `data-user-id="${item.id}"` : ""
+  const chat = `
+      <div class="chat-item" data-conversation-id="${item.conversation_id}" data-type="${item.group_type}" 
+      data-bio="${item.bio}" data-name="${item.conversation_name}"  ${userId} onclick="openChat()">
+        <div class="chat-avatar" >
         <img src="${item.conversation_image}">
         </div>
         <div class="chat-info">
@@ -67,19 +69,42 @@ async function openChat() {
   let chatItem = event.target.closest(".chat-item")
 
   chatItem.classList.add("active-chat")
-  previousConversationId = conversationId;
-  conversationId = chatItem.dataset.id;
-  const response = await auth.authenticatedRequest(`api/conversation/${conversationId}`, null, "GET")
-  const data = await response.json()
 
-  document.querySelectorAll(".chat-item").forEach(element => {
-    element.classList.remove("active-chat")
-  })
+  conversationId = chatItem.dataset.conversationId;
 
-  createMessageContainer(data)
-  populateConversationMessages(data)
-  createSocket(data)
-  changeRoomStatus()
+  const userId = chatItem.dataset.userId
+  const conversationType = chatItem.dataset.type;
+
+  const userIdData = conversationType == "direct" && userId != "undefined" ? userId : null
+
+  let url;
+  if (userIdData != null) {
+    url = `api/conversation/${conversationType}/user/${userIdData}`;
+  } else {
+    url = `api/conversation/${conversationType}/${conversationId}`;
+  }
+
+  const response = await auth.authenticatedRequest(url, null, "GET")
+  if (response.ok) {
+
+    const data = await response.json()
+
+    document.querySelectorAll(".chat-item").forEach(element => {
+      element.classList.remove("active-chat")
+    })
+
+    createMessageContainer(data)
+    if (userId == "undefined") {
+      previousConversationId = conversationId;
+      populateConversationMessages(data)
+      createSocket(data)
+      changeRoomStatus()
+    }
+  } else if (response.status == 403) {
+    const conversationName = chatItem.dataset.name;
+    const conversationBio = chatItem.dataset.bio
+    createJoinLink(conversationId, conversationName, conversationType, conversationBio)
+  }
 
 
 
@@ -98,10 +123,8 @@ function createSocket(data) {
 
 function newUserStatus() {
   if (Object.hasOwn(activeSockets, conversationId)) {
-    console.log("send user status")
     // connect and exit room and again enter use previous socket that created 
     // send status to room
-    console.log('active socket****', activeSockets, conversationId)
     ChatSocket = activeSockets[conversationId]
     const messageType = "status_notif"
     const statusType = 'Online'
@@ -115,9 +138,7 @@ function newUserStatus() {
 function changeRoomStatus() {
 
   if (previousConversationId != null && previousConversationId != conversationId) {
-    console.log("change room", previousConversationId)
     // change user status to offline when go to the other room
-    console.log(activeSockets)
     const previousChatSocket = activeSockets[previousConversationId]
     const messageType = "status_notif"
     const statusType = 'Offline'
@@ -133,15 +154,20 @@ function createMessageContainer(data) {
 
     mainContent.remove()
   }
-
-  const statusDiv = data.group_type == "direct" ? `<div class="chat-status" id="chatStatus" data-user="${data.profile_id}">Offline</div>` : ""
+  let conversationId;
+  if (data.new) {
+    conversationId = ""
+  } else {
+    conversationId = data.conversationId
+  }
+  const statusDiv = data.group_type == "direct" ? `<div class="chat-status" id="chatStatus" data-user="${conversationId}">Offline</div>` : ""
   mainContent = `
     <main class="main-content">
     <div class="chat-header">
       <div class="chat-title" id="chatTitleClick">
         <div class="header-avatar" id="headerAvatar"></div>
         <div>
-          <h2 id="chatName">${data.profile_username}</h2>
+          <h2 id="chatName">${data.conversation_name}</h2>
           ${statusDiv}
         </div>
       </div>
@@ -165,8 +191,33 @@ function createMessageContainer(data) {
 
 }
 
+function createJoinLink(conversationId, conversationName, conversationType, conversationBio) {
+  const app = document.querySelector(".app")
+  let mainContent = document.querySelector(".main-content")
+  if (mainContent) {
+
+    mainContent.remove()
+  }
+
+  mainContent = `
+    <main class="main-content">
+    <div id="joinPromptContainer" style="height: 100%;">
+      <div class="join-container">
+        <div class="join-icon" id="joinIcon">📢</div>
+        <div class="join-title" id="joinTitle">${conversationType}:${conversationName}</div>
+        <div class="join-description" id="joinDescription">${conversationBio||""}</div>
+        <button class="join-button" id="joinButton" data-id="${conversationId}">
+          <svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+          Join ${conversationName}
+        </button>
+      </div>
+    </div>
+  </main>
+  `
+  app.insertAdjacentHTML("beforeend", mainContent)
+}
+
 function populateConversationMessages(data) {
-  console.log(data)
   const messagesContainer = document.getElementById("messagesContainer")
   data.group_chats.forEach(message => {
     const date = new Date(message.created);
@@ -184,8 +235,10 @@ function populateConversationMessages(data) {
   })
 }
 
-function sendMessage() {
-  console.log("send message to ", conversationId)
+async function sendMessage() {
+  if (conversationId == "undefined") {
+    const data = await createConversation("", "direct")
+  }
   const messageValue = document.getElementById("messageInput").value;
   const chatSocket = activeSockets[conversationId]
   const messageType = "message"

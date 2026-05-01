@@ -1,8 +1,9 @@
 class ChatClient {
-	constructor(token, roomName, currentUserId) {
+	constructor(token, roomName, currentUserId, groupType = null) {
 		this.currentUserId = currentUserId
 		this.token = token;
 		this.roomName = roomName
+		this.groupType = groupType
 		this.ws = null;
 		this.isConnected = false;
 		this.connect();
@@ -122,7 +123,7 @@ class ChatClient {
 	}
 
 	changePreviewText(data) {
-		const chatPreview = document.querySelector(`.chat-item[data-id="${data.conversationId}"] .chat-preview`);
+		const chatPreview = document.querySelector(`.chat-item[data-conversation-id="${data.conversationId}"] .chat-preview`);
 		chatPreview.innerText = data.message;
 	}
 

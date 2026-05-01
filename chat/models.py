@@ -24,8 +24,9 @@ class Conversation(models.Model):
 		("private", "Private")
 	]
 	created_by = models.ForeignKey(UserModel, on_delete=models.SET_NULL, null=True, related_name="chat_groups", verbose_name=_("created by"))
+	bio = models.CharField(_("bio"), max_length=250, blank=True)
 	name = models.CharField(_("name"), max_length=150, blank=True)
-	status = models.CharField(_("status"), choices=STATUS_CHOICES, max_length=10)
+	status = models.CharField(_("status"), choices=STATUS_CHOICES, max_length=10, default="private")
 	group_type = models.CharField(_("group type"), choices=GROUP_TYPE, max_length=10)
 	image = models.ImageField(_("image"), upload_to=group_file_path, null=True, blank=True)
 	is_active = models.BooleanField(default=True)
@@ -34,7 +35,9 @@ class Conversation(models.Model):
 	updated = models.DateTimeField(auto_now=True)
 
 	def __str__(self):
-		return f"{self.id}{self.group_type} conversation by {self.created_by}"
+		if self.group_type == "direct":
+			return f"direct by {self.created_by}{self.id}"
+		return f"{self.id}{self.group_type}:{self.name}"
 
 	def get_image(self):
 		if self.image:

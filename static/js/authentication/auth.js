@@ -113,7 +113,7 @@ class Auth {
 
 		}
 	}
-	async authenticatedRequest(url, body, fetchType = "POST") {
+	async authenticatedRequest(url, body, fetchType = "POST", header_kwargs = {}) {
 		let fetchObject = this.fetchPost
 		if (fetchType == "GET") {
 
@@ -121,9 +121,10 @@ class Auth {
 		}
 
 		let headers = {
-			"Authorization": `Bearer ${this.accessToken}`
+			"Authorization": `Bearer ${this.accessToken}`,
+			...header_kwargs
 		}
-
+		console.log(headers)
 		let response = await fetchObject(url, body, headers)
 		if (response.status === 401) {
 			const refreshed = await this.refreshAccessToken();

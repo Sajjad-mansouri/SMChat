@@ -21,6 +21,7 @@ class Profile(models.Model):
 	user = models.OneToOneField(User, on_delete=models.CASCADE ,verbose_name=_("User"))
 	profile_image = models.ImageField(_("Profile Image"), upload_to="users", null=True)
 	birth_day = models.DateTimeField(_("Birth Day"), null=True, blank=True)
+	bio = models.CharField(_("Bio"), max_length=200, blank=True)
 	
 	def __str__(self):
 		return f'"{self.user.get_full_name()}" profile'
