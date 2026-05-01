@@ -52,7 +52,6 @@ class Auth {
 		})
 		try {
 			const response = await this.fetchPost(tokenUrl, body)
-			console.log(response)
 			if (!response.ok) {
 
 				return {
@@ -99,7 +98,6 @@ class Auth {
 			const response = await this.fetchPost(refreshUrl, body)
 
 			if (!response.ok) {
-				console.log(response)
 				throw new Error('Token refresh failed');
 			}
 			const data = await response.json()
@@ -124,7 +122,6 @@ class Auth {
 			"Authorization": `Bearer ${this.accessToken}`,
 			...header_kwargs
 		}
-		console.log(headers)
 		let response = await fetchObject(url, body, headers)
 		if (response.status === 401) {
 			const refreshed = await this.refreshAccessToken();

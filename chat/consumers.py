@@ -35,7 +35,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 		message=json.loads(text_data)
 
 		conversation_id = message['conversationId']
-		print(conversation_id)
+
 		conversation = await aget_object_or_404(Conversation, id=conversation_id)
 		condition = await sync_to_async(self.get_message_condition)(conversation)
 		if condition:
@@ -58,7 +58,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 			await Chat.objects.acreate(user=self.user, conversation=conversation, text=content)
 
 	def get_message_condition(self, conversation):
-		print(conversation.group_type, conversation.created_by)
+
 		return (conversation.group_type == "channel" and conversation.created_by==self.user) or conversation.group_type in ["group", "direct"]
 
 	async def add_extra_value(self, message):

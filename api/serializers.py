@@ -48,7 +48,7 @@ class ConversationSerializer(serializers.ModelSerializer):
 		read_only_fields = ["conversation_id", "bio","conversation_image", "last_message", "group_chats","created_by"]
 
 	def get_conversation_name(self, obj):
-		print('get conversation_name method', obj)
+
 		if obj.group_type == "direct":
 			
 			obj = self.add_member(obj)
@@ -90,7 +90,7 @@ class ConversationSerializer(serializers.ModelSerializer):
 		return data
 
 	def create(self, validated_data):
-		print(validated_data)
+
 		member_users = [validated_data["created_by"]]
 		try:
 			user_id = validated_data.pop('member_user')
@@ -143,4 +143,12 @@ class ConversationWithMessageSerializer(serializers.ModelSerializer):
 class ConversationMemberSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = ConversationMember
-		fields = ["conversation", "user"]
+		fields = ["conversation", "user", "accepted"]
+		read_only_fields = ["accepted"]
+
+	def to_internal_value(self, data):
+		data = data.copy()
+		request = self.context["request"]
+		data["conversation"] = get_object_or_404(Conversation, id=data.pop("conversation"))
+		data["user"] = request.user
+		return data

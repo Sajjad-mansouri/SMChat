@@ -20,7 +20,10 @@ class ChatClient {
 				const notifTime = "enterRoom";
 				const messageType = "status_notif"
 				this.statusNotif(this.roomName, messageType, statusType, notifTime)
-				this.message(this.initMessage, conversationId)
+				if (this.initMessage) {
+
+					this.message(this.initMessage, conversationId)
+				}
 			}
 			this.ws.onmessage = (event) => {
 				try {
@@ -85,7 +88,7 @@ class ChatClient {
 
 	handleMessage(data) {
 		if (data.messageType == "status_notif") {
-			console.log("handleMessage data:", data)
+
 			this.changeChatStatus(data)
 
 

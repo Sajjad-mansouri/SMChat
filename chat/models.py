@@ -60,9 +60,18 @@ class ConversationMember(models.Model):
 	user = models.ForeignKey(UserModel, on_delete=models.CASCADE, related_name='conversations',verbose_name= _("user"))
 	role = models.CharField(_("role"), max_length=20, choices=MEMBER_ROLES, default='member')
 	joined_at = models.DateTimeField(auto_now_add=True)
+	accepted = models.BooleanField(default=False)
 
 	def __str__(self):
 		return f"{self.user} in {self.conversation}"
+
+	class Meta:
+		constraints = [
+			models.UniqueConstraint(
+				fields=['conversation', 'user'],
+				name='unique_membership'
+			)
+		]
 def file_path(instance, file_name):
 	return "chat/{user_id}/{group_id}/{year}/{month}/{day}/{file_name}".format(
 										user_id=instance.user.id,

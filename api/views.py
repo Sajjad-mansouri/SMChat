@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db.models import Q, Value
 from django.contrib.auth import get_user_model
-from .serializers import ConversationSerializer, ConversationWithMessageSerializer, UserSerializer
+from .serializers import ConversationSerializer, ConversationWithMessageSerializer, UserSerializer, ConversationMemberSerializer
 from chat.models import Conversation, ConversationMember, Chat
 from .permissions import IsMember
 
@@ -105,5 +105,6 @@ class SearchView(APIView):
 		return conversation_serializer, user_serializer
 
 class MembershipCreateView(CreateAPIView):
-	serializer_class = ConversationSerializer
+	serializer_class = ConversationMemberSerializer
 	permission_classes = [IsAuthenticated]
+

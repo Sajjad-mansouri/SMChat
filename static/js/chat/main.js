@@ -19,17 +19,25 @@ overlayDr.addEventListener("click", closeDrawer);
 
 
 
-function openNav() {
+function openNav(Nav = null, callback = null) {
   document.querySelectorAll(".nav-pill").forEach(element => {
+    element.classList.remove("hidden")
     element.classList.remove("active")
   })
-  event.target.classList.add("active")
-  const dataNav = event.target.dataset.nav
+  document.querySelector(".search-nav").classList.add("hidden")
+  let dataNav;
+  if (Nav) {
+    document.querySelector(`.nav-pill[data-nav="${Nav}"`).classList.add("active")
+    dataNav = Nav;
+  } else {
+    event.target.classList.add("active")
+    dataNav = event.target.dataset.nav
+  }
 
-  getConversation(dataNav)
+  getConversation(dataNav, callback)
 }
 
-async function getConversation(dataNav) {
+async function getConversation(dataNav, callback = null) {
   const container = document.getElementById("chatsList");
   container.innerText = ""
   const response = await auth.authenticatedRequest(`api/conversations/${dataNav}`, null, "GET")
@@ -41,6 +49,7 @@ async function getConversation(dataNav) {
     populateNavConversations(container, item)
   })
 
+  if (callback) callback();
 }
 
 function populateNavConversations(container, item) {
@@ -65,13 +74,21 @@ getConversation("direct")
 let conversationId = null
 const activeSockets = {}
 let previousConversationId = null
-async function openChat() {
-  let chatItem = event.target.closest(".chat-item")
+async function openChat(chatId = null) {
 
-  chatItem.classList.add("active-chat")
+  let chatItem
+  if (chatId) {
+
+    chatItem = document.querySelector(`.chat-item[data-conversation-id="${chatId}"]`);
+
+  } else {
+
+    chatItem = event.target.closest(".chat-item")
+  }
+
+
 
   conversationId = chatItem.dataset.conversationId;
-
   const userId = chatItem.dataset.userId
   const conversationType = chatItem.dataset.type;
 
@@ -92,6 +109,7 @@ async function openChat() {
     document.querySelectorAll(".chat-item").forEach(element => {
       element.classList.remove("active-chat")
     })
+    chatItem.classList.add("active-chat")
 
     createMessageContainer(data)
     if (userId == "undefined") {
@@ -100,10 +118,11 @@ async function openChat() {
       createSocket(data)
       changeRoomStatus()
     }
-  } else if (response.status == 403) {
+  } else if (response.status == 403 && ["group", "channel"].includes(conversationType)) {
     const conversationName = chatItem.dataset.name;
     const conversationBio = chatItem.dataset.bio
     createJoinLink(conversationId, conversationName, conversationType, conversationBio)
+
   }
 
 }
@@ -136,6 +155,7 @@ function changeRoomStatus() {
 
   if (previousConversationId != null && previousConversationId != conversationId) {
     // change user status to offline when go to the other room
+
     const previousChatSocket = activeSockets[previousConversationId]
     const messageType = "status_notif"
     const statusType = 'Offline'
@@ -206,7 +226,7 @@ function createJoinLink(conversationId, conversationName, conversationType, conv
         <div class="join-icon" id="joinIcon">📢</div>
         <div class="join-title" id="joinTitle">${conversationType}:${conversationName}</div>
         <div class="join-description" id="joinDescription">${conversationBio||""}</div>
-        <button class="join-button" id="joinButton" data-id="${conversationId}">
+        <button class="join-button" id="joinButton" data-id="${conversationId}" onclick="joinConversation(${conversationId}, '${conversationType}') ">
           <svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
           Join ${conversationName}
         </button>
@@ -215,6 +235,30 @@ function createJoinLink(conversationId, conversationName, conversationType, conv
   </main>
   `
   app.insertAdjacentHTML("beforeend", mainContent)
+}
+
+async function joinConversation(conversationId, conversationType) {
+
+  const body = JSON.stringify({
+    "conversation": conversationId,
+  })
+  const response = await auth.authenticatedRequest(`api/membership/add/`, body, "POST")
+  if (response.ok) {
+    const data = await response.json()
+    if (data.accepted) {
+      openNav(conversationType, () => {
+        openChat(conversationId)
+      })
+
+    } else {
+      document.getElementById("joinButton").innerHTML = `
+  <svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M5 2h14M5 22h14M5 2v4c0 4 3 6 7 6s7-2 7-6V2M5 22v-4c0-4 3-6 7-6s7 2 7 6v4"></path>
+  </svg>
+  Awaiting Approval
+      `
+    }
+  }
 }
 
 function populateConversationMessages(data) {
@@ -243,9 +287,11 @@ async function sendMessage() {
     const userId = document.getElementById("chatName").dataset.userId
     const data = await createConversation("", "direct", userId)
     conversationId = data.conversation_id
-    document.getElementById("globalSearch").value = ""
-    document.getElementById("globalSearch").dispatchEvent(new Event("input"))
-    createSocket(data, messageValue)
+    openNav("direct", () => {
+      createSocket(data, messageValue)
+
+      document.querySelector(`.chat-item[data-conversation-id="${conversationId}"]`).classList.add("active-chat")
+    })
   } else {
     const chatSocket = activeSockets[conversationId]
     const messageType = "message"
@@ -315,11 +361,11 @@ document.getElementById("globalSearch").addEventListener("input", async (event) 
     })
   } else {
 
-    document.querySelectorAll(".nav-pill").forEach(element => {
-      element.classList.remove("hidden")
-    })
-    document.querySelector(".search-nav").classList.add("hidden")
+    openNav("direct")
+    let mainContent = document.querySelector(".main-content")
+    if (mainContent) {
 
-    document.querySelector(".nav-pill[data-nav='direct']").click()
+      mainContent.remove()
+    }
   }
 })
