@@ -1,9 +1,9 @@
 class ChatClient {
-	constructor(token, roomName, currentUserId, groupType = null) {
+	constructor(token, roomName, currentUserId, initMessage) {
 		this.currentUserId = currentUserId
 		this.token = token;
 		this.roomName = roomName
-		this.groupType = groupType
+		this.initMessage = initMessage
 		this.ws = null;
 		this.isConnected = false;
 		this.connect();
@@ -20,6 +20,7 @@ class ChatClient {
 				const notifTime = "enterRoom";
 				const messageType = "status_notif"
 				this.statusNotif(this.roomName, messageType, statusType, notifTime)
+				this.message(this.initMessage, conversationId)
 			}
 			this.ws.onmessage = (event) => {
 				try {
@@ -84,6 +85,7 @@ class ChatClient {
 
 	handleMessage(data) {
 		if (data.messageType == "status_notif") {
+			console.log("handleMessage data:", data)
 			this.changeChatStatus(data)
 
 
@@ -128,7 +130,6 @@ class ChatClient {
 	}
 
 	changeChatStatus(data) {
-
 		if (data.sender_id != this.currentUserId) {
 			const chatStatus = document.querySelector(`.chat-status[data-user="${data.sender_id}"]`);
 

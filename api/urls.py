@@ -20,6 +20,8 @@ urlpatterns = [
 
 
 	path("conversation/create/", views.ConversationCreateView.as_view(), name="create_conversation"),
+	path("membership/add/", views.MembershipCreateView.as_view(), name="add_member"),
+
 
 
 

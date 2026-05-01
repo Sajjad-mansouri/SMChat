@@ -26,6 +26,8 @@ class Conversation(models.Model):
 	created_by = models.ForeignKey(UserModel, on_delete=models.SET_NULL, null=True, related_name="chat_groups", verbose_name=_("created by"))
 	bio = models.CharField(_("bio"), max_length=250, blank=True)
 	name = models.CharField(_("name"), max_length=150, blank=True)
+
+
 	status = models.CharField(_("status"), choices=STATUS_CHOICES, max_length=10, default="private")
 	group_type = models.CharField(_("group type"), choices=GROUP_TYPE, max_length=10)
 	image = models.ImageField(_("image"), upload_to=group_file_path, null=True, blank=True)
@@ -45,6 +47,8 @@ class Conversation(models.Model):
 
 		else:
 			return ""
+
+
 
 class ConversationMember(models.Model):
 	MEMBER_ROLES = (

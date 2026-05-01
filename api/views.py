@@ -20,10 +20,6 @@ class Conversations(ListAPIView):
 		q = q1|q2
 		qs = Conversation.objects.filter(q).distinct().prefetch_related("members__user")
 		for conversation in qs:
-
-			other_members = conversation.members.exclude(user=self.request.user)
-
-			conversation.other_users = [other_member.user for other_member in other_members]
 			# conversation.last_message = conversation.chats.first()
 			if Chat.objects.filter(conversation=conversation).exists():
 				conversation.last_message = Chat.objects.filter(conversation=conversation).last().text
@@ -74,9 +70,7 @@ class ConversationDetail(RetrieveAPIView):
 class ConversationCreateView(CreateAPIView):
 	serializer_class = ConversationSerializer
 	permission_classes = [IsAuthenticated]
-	def perform_create(self, serializer):
-		serializer.save()
-		ConversationMember.objects.create(conversation=serializer.instance, user=self.request.user)
+
 class SearchView(APIView):
 	permission_classes = [IsAuthenticated]
 
@@ -109,3 +103,7 @@ class SearchView(APIView):
 			)
 
 		return conversation_serializer, user_serializer
+
+class MembershipCreateView(CreateAPIView):
+	serializer_class = ConversationSerializer
+	permission_classes = [IsAuthenticated]

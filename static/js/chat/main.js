@@ -106,15 +106,12 @@ async function openChat() {
     createJoinLink(conversationId, conversationName, conversationType, conversationBio)
   }
 
-
-
 }
 
-function createSocket(data) {
+function createSocket(data, initMessage = null) {
   const token = localStorage.getItem('accessToken');
   if (!Object.hasOwn(activeSockets, conversationId)) {
-    console.log("create new socket")
-    chatSocket = new ChatClient(token, `${conversationId}`, data.current_user)
+    chatSocket = new ChatClient(token, `${conversationId}`, data.current_user, initMessage)
     activeSockets[conversationId] = chatSocket
   } else {
     newUserStatus()
@@ -155,19 +152,22 @@ function createMessageContainer(data) {
     mainContent.remove()
   }
   let conversationId;
-  if (data.new) {
+  let userData;
+  if (!Object.hasOwn(data, "conversation_id")) {
     conversationId = ""
+    userData = `data-user-id="${data.id}"`
   } else {
-    conversationId = data.conversationId
+    conversationId = data.conversation_id
+    userData = ""
   }
   const statusDiv = data.group_type == "direct" ? `<div class="chat-status" id="chatStatus" data-user="${conversationId}">Offline</div>` : ""
   mainContent = `
     <main class="main-content">
-    <div class="chat-header">
+    <div class="chat-header" >
       <div class="chat-title" id="chatTitleClick">
         <div class="header-avatar" id="headerAvatar"></div>
         <div>
-          <h2 id="chatName">${data.conversation_name}</h2>
+          <h2 id="chatName" data-conversation-id="${conversationId}" ${userData}>${data.conversation_name}</h2>
           ${statusDiv}
         </div>
       </div>
@@ -236,14 +236,23 @@ function populateConversationMessages(data) {
 }
 
 async function sendMessage() {
-  if (conversationId == "undefined") {
-    const data = await createConversation("", "direct")
-  }
-  const messageValue = document.getElementById("messageInput").value;
-  const chatSocket = activeSockets[conversationId]
-  const messageType = "message"
 
-  chatSocket.message(messageValue, conversationId, messageType)
+  const messageValue = document.getElementById("messageInput").value;
+  if (conversationId == "undefined") {
+    // if we dont have previous chat with this user first create conversation and add users to it then create socker
+    const userId = document.getElementById("chatName").dataset.userId
+    const data = await createConversation("", "direct", userId)
+    conversationId = data.conversation_id
+    document.getElementById("globalSearch").value = ""
+    document.getElementById("globalSearch").dispatchEvent(new Event("input"))
+    createSocket(data, messageValue)
+  } else {
+    const chatSocket = activeSockets[conversationId]
+    const messageType = "message"
+
+    chatSocket.message(messageValue, conversationId, messageType)
+
+  }
 }
 
 document.getElementById("createGroupChannelBtn")?.addEventListener("click", () => {
@@ -268,16 +277,21 @@ document.getElementById("submitCreateBtn")?.addEventListener("click", async () =
 document.getElementById("cancelCreateBtn")?.addEventListener("click", () => document.getElementById("createModalOverlay")?.classList.remove("active"));
 
 
-async function createConversation(createNameInputValue, createTypeSelectValue) {
+async function createConversation(createNameInputValue, createTypeSelectValue, userId = null) {
   const body = JSON.stringify({
     "name": createNameInputValue,
-    "group_type": createTypeSelectValue
+    "group_type": createTypeSelectValue,
+    "member_user": userId
   })
   const response = await auth.authenticatedRequest(`api/conversation/create/`, body, "POST")
   return response.json()
 
 }
 
+async function addToMembership() {
+
+
+}
 
 document.getElementById("globalSearch").addEventListener("input", async (event) => {
   const container = document.getElementById("chatsList");
