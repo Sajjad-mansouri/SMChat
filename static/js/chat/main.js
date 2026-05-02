@@ -70,7 +70,7 @@ function populateNavConversations(container, item) {
 }
 
 getConversation("direct")
-
+let replyingTo = null;
 let conversationId = null
 const activeSockets = {}
 let previousConversationId = null
@@ -87,10 +87,11 @@ async function openChat(chatId = null) {
   }
 
 
-
+  previousConversationId = conversationId;
   conversationId = chatItem.dataset.conversationId;
   const userId = chatItem.dataset.userId
   const conversationType = chatItem.dataset.type;
+
 
   const userIdData = conversationType == "direct" && userId != "undefined" ? userId : null
 
@@ -113,7 +114,7 @@ async function openChat(chatId = null) {
 
     createMessageContainer(data)
     if (userId == "undefined") {
-      previousConversationId = conversationId;
+
       populateConversationMessages(data)
       createSocket(data)
       changeRoomStatus()
@@ -152,7 +153,7 @@ function newUserStatus() {
 }
 
 function changeRoomStatus() {
-
+  console.log("previousConversationId", previousConversationId, conversationId)
   if (previousConversationId != null && previousConversationId != conversationId) {
     // change user status to offline when go to the other room
 
@@ -161,6 +162,7 @@ function changeRoomStatus() {
     const statusType = 'Offline'
     const notifTime = "exitRoom"
     previousChatSocket.statusNotif(previousConversationId, messageType, statusType, notifTime)
+    previousConversationId = conversationId;
   }
 }
 
@@ -180,7 +182,9 @@ function createMessageContainer(data) {
     conversationId = data.conversation_id
     userData = ""
   }
+  console.log("data create message container", data)
   const statusDiv = data.group_type == "direct" ? `<div class="chat-status" id="chatStatus" data-user="${conversationId}">Offline</div>` : ""
+
   mainContent = `
     <main class="main-content">
     <div class="chat-header" >
@@ -193,6 +197,15 @@ function createMessageContainer(data) {
       </div>
     </div>
     <div class="messages-container" id="messagesContainer"></div>
+    <div id="replyBar" class="reply-bar" style="display: none;">
+      <div class="reply-bar-info">
+        <div class="reply-bar-sender" id="replyBarSender">Replying to...</div>
+        <div class="reply-bar-text" id="replyBarText"></div>
+      </div>
+      <button class="cancel-reply-btn" id="cancelReplyBtn" onclick="hideReplyBar()">
+        <svg width="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
     <div id="draftPreviewArea" class="attachment-preview-area" style="display: none;"></div>
     <div class="input-area">
     <div class="input-wrapper"><input type="text" class="msg-input" id="messageInput" placeholder="Type a message...">
@@ -268,12 +281,31 @@ function populateConversationMessages(data) {
     const hour = date.getHours();
     const minute = date.getMinutes();
     const timeWithLeadingZeros = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+    let replyHtml;
+    if (message.reply_to) {
+      replyHtml = `
+          <div class="reply-preview">
+            <div class="reply-sender">↳ ${message.reply_to.user_username}</div>
+            <div class="reply-content">${escapeHtml(message.reply_to.text.substring(0, 80))}${message.reply_to.text.length > 80 ? '...' : ''}</div>
+          </div>
+        `;
+    } else {
+      replyHtml = ""
+    }
     const msg = `
     <div class="message ${message.user.id === data.current_user ? 'outgoing' : 'incoming'}">
       <div class="message-sender">${message.user.username}</div>
-      <div class="bubble">${message.text}
+      <div class="bubble">
+      ${replyHtml}
+      ${message.text}
         <div class="message-time">${timeWithLeadingZeros}</div>
+      <div class="message-actions">
+        <button class="action-icon-btn reply-msg-btn" data-id="${message.id}" data-sender="${message.user.id === data.current_user ? 'You' : message.user.username}" data-preview="${getMessagePreview(message).replace(/"/g, '&quot;')}" onclick="reply()">
+          <svg width="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M10 11h4M12 9v4"/></svg>
+        </button>
       </div>
+      </div>
+
     </div>`
     messagesContainer.insertAdjacentHTML("beforeend", msg)
   })
@@ -296,9 +328,11 @@ async function sendMessage() {
     const chatSocket = activeSockets[conversationId]
     const messageType = "message"
 
-    chatSocket.message(messageValue, conversationId, messageType)
+    chatSocket.message(messageValue, conversationId, messageType, replyingTo)
 
   }
+  hideReplyBar()
+  document.getElementById("messageInput").value = ""
 }
 
 document.getElementById("createGroupChannelBtn")?.addEventListener("click", () => {
@@ -369,3 +403,52 @@ document.getElementById("globalSearch").addEventListener("input", async (event) 
     }
   }
 })
+
+
+function getMessagePreview(msg) {
+
+  if (msg.image) return '📷 Photo';
+  if (msg.file) return `📎 ${msg.fileName || 'File'}`;
+  return msg.text || '';
+
+
+}
+
+function reply() {
+  // Attach reply button events
+  event.stopPropagation();
+  const btn = event.target.closest(".reply-msg-btn")
+  const msgId = btn.dataset.id;
+  const senderName = btn.dataset.sender;
+  const preview = btn.dataset.preview;
+  showReplyBar(msgId, senderName, preview);
+}
+
+
+function showReplyBar(messageId, senderName, previewText) {
+  replyingTo = {
+    id: messageId,
+    senderName,
+    previewText
+  };
+
+  const bar = document.getElementById('replyBar');
+  document.getElementById('replyBarSender').innerText = `Replying to ${senderName}`;
+  document.getElementById('replyBarText').innerText = previewText.length > 60 ? previewText.substring(0, 60) + '...' : previewText;
+  bar.style.display = 'flex';
+}
+
+function hideReplyBar() {
+  replyingTo = null;
+  document.getElementById('replyBar').style.display = 'none';
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/[&<>]/g, function(m) {
+    if (m === '&') return '&amp;';
+    if (m === '<') return '&lt;';
+    if (m === '>') return '&gt;';
+    return m;
+  });
+}

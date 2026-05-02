@@ -73,9 +73,9 @@ class ConversationMember(models.Model):
 			)
 		]
 def file_path(instance, file_name):
-	return "chat/{user_id}/{group_id}/{year}/{month}/{day}/{file_name}".format(
+	return "chat/{user_id}/{conversation_id}/{year}/{month}/{day}/{file_name}".format(
 										user_id=instance.user.id,
-										group_id=instance.group.id, 
+										conversation_id=instance.conversation.id, 
 										year = instance.updated.year,
 										month = instance.updated.month,
 										day = instance.updated.day,
@@ -85,7 +85,7 @@ def file_path(instance, file_name):
 class Chat(models.Model):
 	user = models.ForeignKey(UserModel, on_delete=models.SET_NULL, null=True, related_name="chats", verbose_name=_("user"))
 	conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, null=True, related_name="group_chats", verbose_name=_("group"))
-	reply_to = models.ForeignKey(UserModel, on_delete=models.SET_NULL, blank=True, null=True, verbose_name=_("reply to"))
+	reply_to = models.ForeignKey("Chat", on_delete=models.SET_NULL, blank=True, null=True, verbose_name=_("reply to"))
 	text = models.TextField(_("text"), blank=True)
 	file = models.FileField(_("file"), upload_to=file_path, null=True, blank=True)
 	image = models.FileField(_("image"), upload_to=file_path, null=True, blank=True)

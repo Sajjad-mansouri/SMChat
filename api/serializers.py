@@ -30,9 +30,23 @@ class UserSerializer(serializers.ModelSerializer):
 
 class MessageSerializer(serializers.ModelSerializer):
 	user = UserSerializer(read_only=True)
+	reply_to = serializers.SerializerMethodField()
 	class Meta:
 		model = Chat
-		fields = ["id", "user", "text", "created"]
+		fields = ["id", "user", "text", "file", "image", "created", "reply_to"]
+
+	def get_reply_to(self,obj):
+		if obj.reply_to:
+			return {
+					"user_username":obj.reply_to.user.username, 
+					"id":obj.reply_to.id, 
+					"text":obj.reply_to.text,
+					"file":obj.reply_to.file if obj.reply_to.file else None,
+					"image":obj.reply_to.image if obj.reply_to.image else None,
+					"created":obj.reply_to.created
+					}
+		else:
+			return None
 
 class ConversationSerializer(serializers.ModelSerializer):
 	conversation_id = serializers.SerializerMethodField()
