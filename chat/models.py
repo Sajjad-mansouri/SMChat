@@ -100,3 +100,11 @@ class MessageRead(models.Model):
 	user = models.ForeignKey(UserModel, on_delete=models.CASCADE, verbose_name=_("user"))
 	read_at = models.DateTimeField(auto_now_add=True)
 	
+
+
+
+class BlockList(models.Model):
+	user = models.ForeignKey(UserModel, on_delete=models.SET_NULL, null=True, related_name="block_list", verbose_name=_("user"))
+	conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, null=True, verbose_name=_("conversation"))
+	created = models.DateTimeField(auto_now_add=True)
+	updated = models.DateTimeField(auto_now=True)
