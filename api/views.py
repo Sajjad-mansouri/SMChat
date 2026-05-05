@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db.models import Q, Value
 from django.contrib.auth import get_user_model
-from .serializers import ConversationSerializer, ConversationWithMessageSerializer, UserSerializer, ConversationMemberSerializer
+from .serializers import ConversationSerializer, ConversationWithMessageSerializer, UserSerializer, ConversationMemberSerializer, ConversationProfileSerializer
 from chat.models import Conversation, ConversationMember, Chat
 from .permissions import IsMember
 
@@ -27,8 +27,6 @@ class Conversations(ListAPIView):
 				conversation.last_message = ""
 
 		return qs
-
-
 
 
 class ConversationDetail(RetrieveAPIView):
@@ -65,7 +63,12 @@ class ConversationDetail(RetrieveAPIView):
 		else:
 			return ConversationWithMessageSerializer
 
-
+class ConversationProfile(ConversationDetail):
+	def get_serializer_class(self):
+		if isinstance(self.obj, UserModel):
+			return UserSerializer
+		else:
+			return ConversationProfileSerializer	
 
 class ConversationCreateView(CreateAPIView):
 	serializer_class = ConversationSerializer

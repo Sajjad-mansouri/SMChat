@@ -46,6 +46,7 @@ async function getConversation(dataNav, callback = null) {
   }
   const data = await response.json()
   data.forEach(item => {
+    console.log(item)
     populateNavConversations(container, item)
   })
 
@@ -183,15 +184,15 @@ function createMessageContainer(data) {
     userData = ""
   }
   console.log("data create message container", data)
-  const statusDiv = data.group_type == "direct" ? `<div class="chat-status" id="chatStatus" data-user="${conversationId}">Offline</div>` : ""
+  const statusDiv = data.group_type == "direct" ? `<div class="chat-status" id="chatStatus" data-group-type="${data.group_type}"data-conversation-id="${conversationId}" ${userData}>Offline</div>` : ""
 
   mainContent = `
     <main class="main-content">
-    <div class="chat-header" >
+    <div class="chat-header" onclick="openUserProfile()" >
       <div class="chat-title" id="chatTitleClick">
         <div class="header-avatar" id="headerAvatar"></div>
         <div>
-          <h2 id="chatName" data-conversation-id="${conversationId}" ${userData}>${data.conversation_name}</h2>
+          <h2 id="chatName" data-conversation-id="${conversationId}" ${userData} data-group-type="${data.group_type}"data-conversation-id="${conversationId}">${data.conversation_name}</h2>
           ${statusDiv}
         </div>
       </div>
@@ -451,4 +452,102 @@ function escapeHtml(str) {
     if (m === '>') return '&gt;';
     return m;
   });
+}
+
+
+
+async function openUserProfile() {
+  const modal = document.getElementById("profileModal");
+  modal.innerHTML = ""
+  const ChatHeader = document.getElementById("chatName");
+  const conversationId = ChatHeader.dataset.conversationId;
+  const userId = ChatHeader.dataset.userId;
+  const conversationType = ChatHeader.dataset.groupType;
+
+  const userIdData = conversationType == "direct" && userId != "undefined" ? userId : null
+  console.log("userData", userIdData)
+  if (userIdData != null) {
+    url = `api/conversation/${conversationType}/user/${userIdData}/profile/`;
+  } else {
+    url = `api/conversation/${conversationType}/profile/${conversationId}`;
+  }
+  console.log(url)
+  const response = await auth.authenticatedRequest(url, null, "GET")
+  const data = await response.json()
+  console.log(conversationType)
+  const memberDiv = conversationType == "direct" ? "" : `<div class="profile-modal-members" id="modalMembers">${data.members} subscribers</div>`
+  const modalContent = `
+  <div class="profile-modal">
+    <div class="profile-modal-header">
+      <button class="close-modal" id="closeModalBtn" onclick="closeProfileModal()">✕</button>
+      <div class="profile-modal-avatar" id="modalAvatar"><img src="${data.conversation_image}"></div>
+      <div class="profile-modal-name" id="modalName">${data.conversation_name}</div>
+      ${memberDiv}
+    </div>
+    <div class="profile-modal-body">
+      <div class="profile-bio">
+        <div class="profile-bio-label">📝 Bio</div>
+        <div class="profile-bio-text" id="modalBio">${data.bio}</div>
+      </div>
+      <div class="profile-actions">
+        <button class="message-user-btn" id="messageUserBtn">
+          <svg width="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Send Message
+        </button>
+        <div style="position: relative;">
+          <button class="three-dots-btn" id="threeDotsBtn" onclick = "openThreeDot()">
+            <svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+          </button>
+          <div class="dropdown-menu" id="dropdownMenu" >
+            <div class="dropdown-item" id="blockUserBtn">
+              <svg width="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M4 4l16 16"/></svg>
+              Block User
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  `
+  modal.innerHTML = modalContent
+  modal.classList.add("active");
+  document.querySelector('.dropdown-menu').classList.remove('active');
+}
+
+// Modal close and dropdown logic
+function closeProfileModal() {
+  document.getElementById("profileModal").classList.remove("active");
+
+}
+
+document.getElementById("profileModal").addEventListener("click", (e) => {
+  if (e.target === document.getElementById("profileModal")) {
+    document.getElementById("profileModal").classList.remove("active");
+  }
+});
+
+// Three dots dropdown
+function openThreeDot() {
+  event.stopPropagation();
+  const dropdownMenu = document.getElementById("dropdownMenu");
+
+  dropdownMenu.classList.toggle("active");
+
+}
+
+
+document.addEventListener("click", (e) => {
+  if (!e.target.closest("#threeDotsBtn") && !e.target.closest("#dropdownMenu")) {
+    hideDropDownMenu()
+  }
+});
+
+function hideDropDownMenu() {
+  const dropdownMenu = document.getElementById("dropdownMenu");
+  if (dropdownMenu) {
+
+    dropdownMenu.classList.remove("active");
+  }
+
 }

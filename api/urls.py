@@ -17,6 +17,11 @@ urlpatterns = [
 	path("conversation/<slug:conversation_type>/<int:conversation_id>/", views.ConversationDetail.as_view(), name="conversation"),
 	path("conversation/<slug:conversation_type>/user/<int:user_id>/", views.ConversationDetail.as_view(), name="new_user"),
 
+	path("conversation/<slug:conversation_type>/profile/<int:conversation_id>/", views.ConversationProfile.as_view(), name="conversation_profile"),
+	path("conversation/<slug:conversation_type>/user/<int:user_id>/profile/", views.ConversationDetail.as_view(), name="new_user_profile"),
+
+
+
 
 
 	path("conversation/create/", views.ConversationCreateView.as_view(), name="create_conversation"),

@@ -54,12 +54,13 @@ class ConversationSerializer(serializers.ModelSerializer):
 	conversation_image = serializers.SerializerMethodField()
 	last_message = serializers.SerializerMethodField()
 	current_user = serializers.SerializerMethodField()
+	bio = serializers.SerializerMethodField()
 
 
 	class Meta:
 		model = Conversation
 		fields = ["conversation_id", "current_user", "name","conversation_name", "bio", "conversation_image","last_message","created_by", "group_type", "group_chats"]
-		read_only_fields = ["conversation_id", "bio","conversation_image", "last_message", "group_chats","created_by"]
+		read_only_fields = ["conversation_id", "bio","conversation_image", "last_message","created_by"]
 
 	def get_conversation_name(self, obj):
 
@@ -75,7 +76,7 @@ class ConversationSerializer(serializers.ModelSerializer):
 		if obj.group_type == "direct":
 			obj = self.add_member(obj)
 
-			return [other_user.profile.get_image() for other_user in obj.other_users]
+			return [other_user.profile.get_image() for other_user in obj.other_users][0]
 		else:
 			return obj.get_image()
 
@@ -96,6 +97,14 @@ class ConversationSerializer(serializers.ModelSerializer):
 	def get_current_user(self, obj):
 		request = self.context["request"]
 		return request.user.id
+
+	def get_bio(self, obj):
+		if obj.group_type == "direct":
+			obj = self.add_member(obj)
+
+			return [other_user.profile.bio for other_user in obj.other_users][0]
+		else:
+			return obj.bio
 
 	def to_internal_value(self, data):
 		data = data.copy()
@@ -122,21 +131,22 @@ class ConversationSerializer(serializers.ModelSerializer):
 		ConversationMember.objects.bulk_create(conversations)
 		return conversation
 
-class ConversationWithMessageSerializer(serializers.ModelSerializer):
-	group_chats = MessageSerializer(many=True, read_only=True)
+
+class ConversationProfileSerializer(serializers.ModelSerializer):
 	current_user = serializers.SerializerMethodField()
 	conversation_name = serializers.SerializerMethodField()
 	conversation_id = serializers.SerializerMethodField()
-
+	bio = serializers.SerializerMethodField()
+	members = serializers.SerializerMethodField()
+	conversation_image = serializers.SerializerMethodField()
 
 
 	class Meta:
 		model = Conversation
 		fields = [
-		"created_by", "group_type", "bio",
-		"group_chats", "name", "current_user", 
+		"created_by", "group_type", "bio","members",
+		"name", "conversation_image", "current_user", 
 		"conversation_id", "conversation_name"]
-
 
 	def get_current_user(self, obj):
 		request = self.context["request"]
@@ -146,13 +156,57 @@ class ConversationWithMessageSerializer(serializers.ModelSerializer):
 		if obj.group_type == "direct":
 			if isinstance(obj, UserModel):
 				return obj.username
-			return obj.member.username
+
+			other_user = self.get_direct_other_user(obj)
+			if other_user:
+
+				return other_user.username
 		else:
 			return obj.name
+
+	def get_direct_other_user(self, obj):
+		request = self.context["request"]
+
+		if obj.members.exclude(user=request.user).exists():
+			return obj.members.exclude(user=request.user)[0].user
+		else:
+			return None
 
 
 	def get_conversation_id(self, obj):
 		return obj.id
+
+	def get_bio(self, obj):
+		if obj.group_type == "direct":
+			other_user = self.get_direct_other_user(obj)
+
+			return other_user.profile.bio
+		else:
+			return obj.bio
+
+	def get_members(self, obj):
+		return obj.members.count()
+
+
+	def get_conversation_image(self, obj):
+		if obj.group_type == "direct":
+			other_user = self.get_direct_other_user(obj)
+
+			return other_user.profile.get_image()
+		else:
+			return obj.get_image()
+class ConversationWithMessageSerializer(ConversationProfileSerializer):
+	group_chats = MessageSerializer(many=True, read_only=True)
+
+	class Meta(ConversationProfileSerializer.Meta):
+		model = Conversation
+		fields = [
+		"created_by", "group_type", "bio",
+		"group_chats", "name", "current_user", 
+		"conversation_id", "conversation_name"]
+
+
+
 
 class ConversationMemberSerializer(serializers.ModelSerializer):
 	class Meta:
