@@ -30,6 +30,9 @@ urlpatterns = [
 
 
 
+	path("blocklist/toggle/", views.BlockUnblockView.as_view(), name="create_blocklist"),
+	path("blocklist/toggle/<int:pk>/", views.BlockUnblockView.as_view(), name="delete_blocklist"),
+
 
 
 

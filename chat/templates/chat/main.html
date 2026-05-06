@@ -90,7 +90,19 @@
 <div class="profile-modal-overlay" id="profileModal">
 
 </div>
-
+<div class="confirmation-modal-overlay" id="blockConfirmModal">
+  <div class="confirmation-modal">
+    <div class="confirmation-icon">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M4 4l16 16"/></svg>
+    </div>
+    <div class="confirmation-title">Block User?</div>
+    <div class="confirmation-desc" id="confirmBlockDesc">You will no longer receive messages from this person. They won't be able to see your online status or contact you.</div>
+    <div class="confirmation-actions">
+      <button class="confirmation-cancel" id="cancelBlockBtn">Cancel</button>
+      <button class="confirmation-confirm" id="confirmBlockBtn">Block</button>
+    </div>
+  </div>
+</div>
 <script src="{%static 'js/authentication/auth.js'%}"></script>
 <script src="{%static 'js/chat/chat_socket.js'%}"></script>
 

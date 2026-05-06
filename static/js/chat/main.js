@@ -499,9 +499,9 @@ async function openUserProfile() {
             <svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
           </button>
           <div class="dropdown-menu" id="dropdownMenu" >
-            <div class="dropdown-item" id="blockUserBtn">
+            <div class="dropdown-item" id="blockUserBtn" onclick="blockConversation('${data.conversation_name}',${data.conversation_id}, ${data.id}, ${data.blocklist_id})">
               <svg width="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M4 4l16 16"/></svg>
-              Block User
+              ${data.blocklist_id!=null?"UnBlock":"Block"} User
             </div>
 
           </div>
@@ -551,3 +551,74 @@ function hideDropDownMenu() {
   }
 
 }
+
+
+async function blockConversation(conversationName, conversationId, userId, blocklistID = null) {
+  console.log(blocklistID, typeof blocklistID)
+  if (blocklistID == null) {
+    // Show confirmation modal BEFORE blocking
+
+    showBlockConfirmation(conversationName, async () => {
+
+
+      // re-render maybe update chat list if needed
+      let body
+      if (conversationId == undefined) {
+        body = JSON.stringify({
+          "blocked_user": userId,
+        })
+
+      } else {
+        console.log("else")
+        body = JSON.stringify({
+          "conversation": conversationId,
+        })
+      }
+
+      const response = await auth.authenticatedRequest(`api/blocklist/toggle/`, body, "POST")
+      if (response.ok) {
+        hideBlockConfirmation();
+        openUserProfile()
+      }
+
+    });
+  } else {
+    const response = await auth.authenticatedRequest(`api/blocklist/toggle/${blocklistID}/`, "", "DELETE")
+    if (response.ok) {
+      openUserProfile()
+      alert(`You have unblocked ${userId}`);
+
+    }
+  }
+
+
+
+}
+
+
+const blockConfirmModal = document.getElementById("blockConfirmModal");
+let pendingBlockAction = null; // store the callback for actual block
+
+function showBlockConfirmation(userName, onConfirm) {
+  const descEl = document.getElementById("confirmBlockDesc");
+  descEl.innerHTML = `You are about to block <strong>${escapeHtml(userName)}</strong>. They will no longer be able to message you, and you won't see their messages. You can unblock later from the profile menu.`;
+  blockConfirmModal.classList.add("active");
+  pendingBlockAction = onConfirm;
+}
+
+function hideBlockConfirmation() {
+  blockConfirmModal.classList.remove("active");
+  pendingBlockAction = null;
+}
+
+
+document.getElementById("cancelBlockBtn").addEventListener("click", hideBlockConfirmation);
+document.getElementById("confirmBlockBtn").addEventListener("click", () => {
+  if (pendingBlockAction) {
+    pendingBlockAction();
+  }
+  hideBlockConfirmation();
+});
+blockConfirmModal.addEventListener("click", (e) => {
+  if (e.target === blockConfirmModal) hideBlockConfirmation();
+});

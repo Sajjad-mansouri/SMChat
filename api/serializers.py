@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
-from chat.models import Conversation, Chat, ConversationMember
+from chat.models import Conversation, Chat, ConversationMember, BlockList
 
 UserModel = get_user_model()
 
@@ -10,12 +10,13 @@ class UserSerializer(serializers.ModelSerializer):
 	conversation_image = serializers.SerializerMethodField()
 	group_type = serializers.SerializerMethodField()
 	bio = serializers.SerializerMethodField()
+	blocklist_id = serializers.SerializerMethodField()
 
 
 
 	class Meta:
 		model = UserModel
-		fields = ["id", "username", "conversation_name", "conversation_image", "group_type", "bio",]
+		fields = ["id", "username", "conversation_name", "conversation_image", "group_type", "bio", "blocklist_id"]
 	def get_conversation_name(self, obj):
 			return obj.username
 
@@ -28,6 +29,12 @@ class UserSerializer(serializers.ModelSerializer):
 	def get_bio(self, obj):
 		return obj.profile.bio
 
+	def get_blocklist_id(self, obj):
+		request = self.context["request"]
+		try:
+			return BlockList.objects.get(user=request.user, blocked_user=obj).id
+		except BlockList.DoesNotExist:
+			return None
 class MessageSerializer(serializers.ModelSerializer):
 	user = UserSerializer(read_only=True)
 	reply_to = serializers.SerializerMethodField()
@@ -139,12 +146,13 @@ class ConversationProfileSerializer(serializers.ModelSerializer):
 	bio = serializers.SerializerMethodField()
 	members = serializers.SerializerMethodField()
 	conversation_image = serializers.SerializerMethodField()
+	blocklist_id = serializers.SerializerMethodField()
 
 
 	class Meta:
 		model = Conversation
 		fields = [
-		"created_by", "group_type", "bio","members",
+		"created_by", "group_type", "bio","members","blocklist_id",
 		"name", "conversation_image", "current_user", 
 		"conversation_id", "conversation_name"]
 
@@ -195,18 +203,23 @@ class ConversationProfileSerializer(serializers.ModelSerializer):
 			return other_user.profile.get_image()
 		else:
 			return obj.get_image()
+
+	def get_blocklist_id(self, obj):
+		request = self.context["request"]
+		try:
+			return BlockList.objects.get(user=request.user, conversation=obj).id
+		except BlockList.DoesNotExist:
+			return None
+
 class ConversationWithMessageSerializer(ConversationProfileSerializer):
 	group_chats = MessageSerializer(many=True, read_only=True)
 
 	class Meta(ConversationProfileSerializer.Meta):
 		model = Conversation
 		fields = [
-		"created_by", "group_type", "bio",
+		"created_by", "group_type", "bio","blocklist_id",
 		"group_chats", "name", "current_user", 
 		"conversation_id", "conversation_name"]
-
-
-
 
 class ConversationMemberSerializer(serializers.ModelSerializer):
 	class Meta:
@@ -220,3 +233,30 @@ class ConversationMemberSerializer(serializers.ModelSerializer):
 		data["conversation"] = get_object_or_404(Conversation, id=data.pop("conversation"))
 		data["user"] = request.user
 		return data
+
+class BlockListSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = BlockList
+		fields = ["conversation", "blocked_user"]
+
+	def to_internal_value(self, data):
+		data = data.copy()
+		request = self.context["request"]
+		data["user"] = request.user
+		return data
+
+
+	def create(self, validated_data):
+
+		print(validated_data)
+		user = validated_data["user"]
+		if "conversation" in validated_data:
+			conversation_id = validated_data.pop('conversation')
+			conversation = get_object_or_404(Conversation, id=int(conversation_id))
+			block_list = BlockList.objects.create(user=user, conversation=conversation)
+		elif "blocked_user" in validated_data:
+			blocked_user_id = validated_data.pop('blocked_user')
+			blocked_user = get_object_or_404(UserModel, id=int(blocked_user_id))
+			block_list = BlockList.objects.create(user=user, blocked_user=blocked_user)
+
+		return block_list

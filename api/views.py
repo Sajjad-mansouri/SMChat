@@ -1,11 +1,12 @@
 from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView
+from rest_framework import mixins
+from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db.models import Q, Value
 from django.contrib.auth import get_user_model
-from .serializers import ConversationSerializer, ConversationWithMessageSerializer, UserSerializer, ConversationMemberSerializer, ConversationProfileSerializer
-from chat.models import Conversation, ConversationMember, Chat
+from .serializers import ConversationSerializer, ConversationWithMessageSerializer, UserSerializer, ConversationMemberSerializer, ConversationProfileSerializer, BlockListSerializer
+from chat.models import Conversation, ConversationMember, Chat, BlockList
 from .permissions import IsMember
 
 
@@ -110,4 +111,28 @@ class SearchView(APIView):
 class MembershipCreateView(CreateAPIView):
 	serializer_class = ConversationMemberSerializer
 	permission_classes = [IsAuthenticated]
+
+
+
+class BlockListCreateView(CreateAPIView):
+	serializer_class = BlockListSerializer
+	permission_classes = [IsAuthenticated]
+
+
+class BlockUnblockView(
+						mixins.CreateModelMixin,
+						mixins.DestroyModelMixin,
+						GenericAPIView
+						):
+
+	serializer_class = BlockListSerializer
+	permission_classes = [IsAuthenticated]
+	def delete(self, request, *args, **kwargs):
+		return self.destroy(request, *args, **kwargs)
+
+	def post(self, request, *args, **kwargs):
+		return self.create(request, *args, **kwargs)
+
+	def get_queryset(self):
+		return BlockList.objects.all()
 

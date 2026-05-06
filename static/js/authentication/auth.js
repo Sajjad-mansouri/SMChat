@@ -42,7 +42,19 @@ class Auth {
 
 
 	}
+	async fetchDELETE(url, body, headers = {}) {
 
+		const response = await fetch(url, {
+			method: "DELETE",
+			headers: {
+				...headers,
+			},
+		})
+
+		return response
+
+
+	}
 	async getToken(username, password) {
 		const tokenUrl = `${this.baseAPIUrl}/token/`;
 
@@ -116,6 +128,8 @@ class Auth {
 		if (fetchType == "GET") {
 
 			fetchObject = this.fetchGET
+		} else if (fetchType == "DELETE") {
+			fetchObject = this.fetchDELETE
 		}
 
 		let headers = {

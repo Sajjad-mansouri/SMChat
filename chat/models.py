@@ -104,7 +104,9 @@ class MessageRead(models.Model):
 
 
 class BlockList(models.Model):
-	user = models.ForeignKey(UserModel, on_delete=models.SET_NULL, null=True, related_name="block_list", verbose_name=_("user"))
-	conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, null=True, verbose_name=_("conversation"))
+	user = models.ForeignKey(UserModel, on_delete=models.CASCADE, related_name="user_block_list", verbose_name=_("user"))
+	conversation = models.ForeignKey(Conversation, on_delete=models.SET_NULL, null=True, verbose_name=_("conversation"))
+	blocked_user = models.ForeignKey(UserModel, on_delete=models.SET_NULL, null=True, related_name="block_list", verbose_name=_("Blocked User"))
+
 	created = models.DateTimeField(auto_now_add=True)
 	updated = models.DateTimeField(auto_now=True)
