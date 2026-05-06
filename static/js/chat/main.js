@@ -474,7 +474,8 @@ async function openUserProfile() {
   console.log(url)
   const response = await auth.authenticatedRequest(url, null, "GET")
   const data = await response.json()
-  console.log(conversationType)
+  const blocklistID = data.blocklist_id
+  console.log("type blocklist id", typeof data.blocklist_id, blocklistID, typeof blocklistID)
   const memberDiv = conversationType == "direct" ? "" : `<div class="profile-modal-members" id="modalMembers">${data.members} subscribers</div>`
   const modalContent = `
   <div class="profile-modal">
@@ -501,7 +502,7 @@ async function openUserProfile() {
           <div class="dropdown-menu" id="dropdownMenu" >
             <div class="dropdown-item" id="blockUserBtn" onclick="blockConversation('${data.conversation_name}',${data.conversation_id}, ${data.id}, ${data.blocklist_id})">
               <svg width="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M4 4l16 16"/></svg>
-              ${data.blocklist_id!=null?"UnBlock":"Block"} User
+              ${data.blocklist_id!= null ?"UnBlock":"Block"} User
             </div>
 
           </div>

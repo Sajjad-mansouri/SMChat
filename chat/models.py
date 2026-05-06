@@ -57,7 +57,7 @@ class ConversationMember(models.Model):
 		('member', 'Member'),
 	)
 	conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name='members', verbose_name=_("conversation"))
-	user = models.ForeignKey(UserModel, on_delete=models.CASCADE, related_name='conversations',verbose_name= _("user"))
+	user = models.ForeignKey(UserModel, on_delete=models.CASCADE, related_name='conversation_members',verbose_name= _("user"))
 	role = models.CharField(_("role"), max_length=20, choices=MEMBER_ROLES, default='member')
 	joined_at = models.DateTimeField(auto_now_add=True)
 	accepted = models.BooleanField(default=False)
@@ -105,8 +105,8 @@ class MessageRead(models.Model):
 
 class BlockList(models.Model):
 	user = models.ForeignKey(UserModel, on_delete=models.CASCADE, related_name="user_block_list", verbose_name=_("user"))
-	conversation = models.ForeignKey(Conversation, on_delete=models.SET_NULL, null=True, verbose_name=_("conversation"))
-	blocked_user = models.ForeignKey(UserModel, on_delete=models.SET_NULL, null=True, related_name="block_list", verbose_name=_("Blocked User"))
+	conversation = models.ForeignKey(Conversation, on_delete=models.SET_NULL, blank=True,null=True, verbose_name=_("conversation"))
+	blocked_user = models.ForeignKey(UserModel, on_delete=models.SET_NULL, blank=True,null=True, related_name="blocked_blacklist", verbose_name=_("Blocked User"))
 
 	created = models.DateTimeField(auto_now_add=True)
 	updated = models.DateTimeField(auto_now=True)
