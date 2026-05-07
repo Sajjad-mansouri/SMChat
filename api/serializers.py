@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
+from django.db.models import Q
 from chat.models import Conversation, Chat, ConversationMember, BlockList
 
 UserModel = get_user_model()
@@ -120,7 +121,7 @@ class ConversationSerializer(serializers.ModelSerializer):
 		return data
 
 	def create(self, validated_data):
-
+		print("craete method serializer")
 		member_users = [validated_data["created_by"]]
 		try:
 			user_id = validated_data.pop('member_user')
@@ -138,6 +139,14 @@ class ConversationSerializer(serializers.ModelSerializer):
 		ConversationMember.objects.bulk_create(conversations)
 		return conversation
 
+	def validate(self, data):
+		print("validate serializer", data)
+		request = self.context["request"]
+		q1 = Q(user=data["created_by"]) & Q(blocked_user_id=data["member_user"])
+		q2 = Q(user=data["member_user"]) & Q(blocked_user_id=data["created_by"])
+		if BlockList.objects.filter(q1 | q2).exists():
+			raise serializers.ValidationError("can not create conversation for users that block each other")
+		return data
 
 class ConversationProfileSerializer(serializers.ModelSerializer):
 	current_user = serializers.SerializerMethodField()
@@ -207,7 +216,9 @@ class ConversationProfileSerializer(serializers.ModelSerializer):
 	def get_blocklist_id(self, obj):
 		request = self.context["request"]
 		try:
-			return BlockList.objects.get(user=request.user, conversation=obj).id
+			other_user = self.get_direct_other_user(obj)
+			q = (Q(user=request.user) & Q(conversation=obj))|(Q(user=request.user) & Q(blocked_user=other_user))
+			return BlockList.objects.get(q).id
 		except BlockList.DoesNotExist:
 			return None
 
@@ -251,9 +262,12 @@ class BlockListSerializer(serializers.ModelSerializer):
 		print(validated_data)
 		user = validated_data["user"]
 		if "conversation" in validated_data:
+			#add conversation and user in blocklist
+			request = self.context["request"]
 			conversation_id = validated_data.pop('conversation')
 			conversation = get_object_or_404(Conversation, id=int(conversation_id))
-			block_list = BlockList.objects.create(user=user, conversation=conversation)
+			other_user = ConversationMember.objects.filter(conversation=conversation).exclude(user=request.user)[0].user
+			block_list = BlockList.objects.create(user=user, conversation=conversation, blocked_user=other_user)
 		elif "blocked_user" in validated_data:
 			blocked_user_id = validated_data.pop('blocked_user')
 			blocked_user = get_object_or_404(UserModel, id=int(blocked_user_id))

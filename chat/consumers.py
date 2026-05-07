@@ -8,7 +8,7 @@ from django.shortcuts import aget_object_or_404, get_object_or_404
 
 from asgiref.sync import sync_to_async
 import json
-from .models import Chat, Conversation
+from .models import Chat, Conversation,BlockList
 
 User=get_user_model()
 
@@ -67,9 +67,20 @@ class ChatConsumer(AsyncWebsocketConsumer):
 				return await Chat.objects.acreate(user=self.user, conversation=conversation, text=content)
 
 	def get_message_condition(self, conversation):
+		q = (conversation.group_type == "channel" and conversation.created_by==self.user) or conversation.group_type in ["group", "direct"]
+		if conversation.group_type == "direct":
+			user1,user2 = self.get_conversation_users(conversation)
 
-		return (conversation.group_type == "channel" and conversation.created_by==self.user) or conversation.group_type in ["group", "direct"]
+			is_conversation_blocked = not conversation.blocklist_set.exists()
+			q_users = (Q(user_id=user1) & Q(blocked_user_id=user2))|(Q(user_id=user2) & Q(blocked_user_id=user1))
+			are_users_blocked = not BlockList.objects.filter(q_users).exists()
+			
 
+			q = is_conversation_blocked and are_users_blocked and q
+		return q
+
+	def get_conversation_users(self, conversation):
+		return conversation.members.values_list("user", flat=True)
 	async def add_extra_value(self, message, msg_obj):
 
 		if self.reply_to:

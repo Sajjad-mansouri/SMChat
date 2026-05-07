@@ -318,13 +318,17 @@ async function sendMessage() {
   if (conversationId == "undefined") {
     // if we dont have previous chat with this user first create conversation and add users to it then create socker
     const userId = document.getElementById("chatName").dataset.userId
-    const data = await createConversation("", "direct", userId)
-    conversationId = data.conversation_id
-    openNav("direct", () => {
-      createSocket(data, messageValue)
+    const response = await createConversation("", "direct", userId)
+    if (response.ok) {
+      const data = await response.json()
+      conversationId = data.conversation_id
+      openNav("direct", () => {
+        createSocket(data, messageValue)
 
-      document.querySelector(`.chat-item[data-conversation-id="${conversationId}"]`).classList.add("active-chat")
-    })
+        document.querySelector(`.chat-item[data-conversation-id="${conversationId}"]`).classList.add("active-chat")
+      })
+
+    }
   } else {
     const chatSocket = activeSockets[conversationId]
     const messageType = "message"
@@ -345,7 +349,8 @@ document.getElementById("submitCreateBtn")?.addEventListener("click", async () =
   const createNameInputValue = document.getElementById("createNameInput").value.trim()
   const createTypeSelectValue = document.getElementById("createTypeSelect").value
   if (createNameInputValue && createTypeSelectValue) {
-    const data = await createConversation(createNameInputValue, createTypeSelectValue)
+    const response = await createConversation(createNameInputValue, createTypeSelectValue)
+    const data = await response.json()
     const container = document.getElementById("chatsList");
     const activeNav = document.querySelector(`.nav-pill.active[data-nav="${data.group_type}"]`);
     if (activeNav) {
@@ -365,7 +370,7 @@ async function createConversation(createNameInputValue, createTypeSelectValue, u
     "member_user": userId
   })
   const response = await auth.authenticatedRequest(`api/conversation/create/`, body, "POST")
-  return response.json()
+  return response
 
 }
 

@@ -9,3 +9,4 @@ class IsMember(permissions.BasePermission):
 			return False
 		else:
 			return True
+
