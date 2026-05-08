@@ -13,6 +13,8 @@ from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth import views as auth_views
 from django.views.generic.edit import CreateView
 from django.views.generic.base import TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin
+
 
 from .forms import UserRegistrationForm
 
@@ -165,6 +167,8 @@ class LoginView(auth_views.LoginView):
     template_name = "account/registration/login.html"
 
 
+
+
 class PasswordResetView(auth_views. PasswordResetView):
     template_name = "account/registration/pass_reset_form.html"
     email_template_name = "account/registration/pass_reset_email.html"
@@ -182,3 +186,5 @@ class PasswordResetConfirmView(auth_views.PasswordResetConfirmView):
 
 class PasswordResetCompleteView(auth_views.PasswordResetCompleteView):
     template_name = "account/registration/pass_reset_complete.html"
+
+

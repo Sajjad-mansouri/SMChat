@@ -5,6 +5,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db.models import Q, Value
 from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate, login
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import ConversationSerializer, ConversationWithMessageSerializer, UserSerializer, ConversationMemberSerializer, ConversationProfileSerializer, BlockListSerializer
 from chat.models import Conversation, ConversationMember, Chat, BlockList
 from .permissions import IsMember
@@ -139,3 +144,21 @@ class BlockUnblockView(
 	def get_queryset(self):
 		return BlockList.objects.all()
 
+
+
+class LoginApiView(APIView):
+	permission_classes = []
+	def post(self, request, *args, **kwargs):
+
+		username = request.data.get("email")
+		password = request.data.get("password")
+		user = authenticate(username=username, password=password)
+		if not user:
+			return Response({"error":"Invalid Credentials"}, status=401)
+
+		refresh = RefreshToken.for_user(user)
+
+		return Response({
+			"access": str(refresh.access_token),
+			"refresh": str(refresh)
+			})

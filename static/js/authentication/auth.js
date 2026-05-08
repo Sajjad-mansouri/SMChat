@@ -2,6 +2,8 @@ class Auth {
 	constructor() {
 
 		this.baseAPIUrl = "http://localhost:8000/api";
+		this.loginAPIUrl = "http://localhost:8000/api/login/";
+
 
 		this.refreshToken = localStorage.getItem("refreshToken");
 		this.accessToken = localStorage.getItem("accessToken");
@@ -11,6 +13,7 @@ class Auth {
 
 	async login(username, password) {
 		let data = await this.getToken(username, password)
+		console.log("login data", data)
 		return data
 
 	}
@@ -63,7 +66,9 @@ class Auth {
 			"password": password
 		})
 		try {
-			const response = await this.fetchPost(tokenUrl, body)
+
+			const response = await this.fetchPost(this.loginAPIUrl, body)
+
 			if (!response.ok) {
 
 				return {

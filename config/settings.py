@@ -171,3 +171,7 @@ CHANNEL_LAYERS = {
         "BACKEND": "channels.layers.InMemoryChannelLayer"
     }
 }
+
+from django.urls import reverse_lazy
+LOGIN_URL = reverse_lazy("account:login")
+LOGOUT_REDIRECT_URL = reverse_lazy("account:login")
