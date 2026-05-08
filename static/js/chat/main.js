@@ -46,7 +46,6 @@ async function getConversation(dataNav, callback = null) {
   }
   const data = await response.json()
   data.forEach(item => {
-    console.log(item)
     populateNavConversations(container, item)
   })
 
@@ -55,6 +54,7 @@ async function getConversation(dataNav, callback = null) {
 
 function populateNavConversations(container, item) {
   const userId = item.group_type == "direct" ? `data-user-id="${item.id}"` : ""
+  const blockedBadgeSpan = item.blocklist_id != null ? '<span class="blocked-chip">Blocked</span>' : "";
   const chat = `
       <div class="chat-item" data-conversation-id="${item.conversation_id}" data-type="${item.group_type}" 
       data-bio="${item.bio}" data-name="${item.conversation_name}"  ${userId} onclick="openChat()">
@@ -62,7 +62,7 @@ function populateNavConversations(container, item) {
         <img src="${item.conversation_image}">
         </div>
         <div class="chat-info">
-          <div class="chat-name">${item.conversation_name}</div>
+          <div class="chat-name">${item.conversation_name} ${blockedBadgeSpan}</div>
           <div class="chat-preview">${item.last_message|| ""}</div>
         </div>
       </div>
@@ -76,11 +76,15 @@ let conversationId = null
 const activeSockets = {}
 let previousConversationId = null
 async function openChat(chatId = null) {
-
+  console.log("chatid in openchat", chatId)
   let chatItem
   if (chatId) {
-
+    console.log("chatid exists")
+    console.log(`.chat-item[data-conversation-id="${chatId}"]`)
+    console.log(document.querySelector(".chat-item"))
+    console.log(document)
     chatItem = document.querySelector(`.chat-item[data-conversation-id="${chatId}"]`);
+    console.log(chatItem)
 
   } else {
 
@@ -154,7 +158,6 @@ function newUserStatus() {
 }
 
 function changeRoomStatus() {
-  console.log("previousConversationId", previousConversationId, conversationId)
   if (previousConversationId != null && previousConversationId != conversationId) {
     // change user status to offline when go to the other room
 
@@ -183,9 +186,20 @@ function createMessageContainer(data) {
     conversationId = data.conversation_id
     userData = ""
   }
-  console.log("data create message container", data)
-  const statusDiv = data.group_type == "direct" ? `<div class="chat-status" id="chatStatus" data-group-type="${data.group_type}"data-conversation-id="${conversationId}" ${userData}>Offline</div>` : ""
+  let statusDiv;
+  if (data.group_type == "direct") {
+    let blocklistClass = "";
+    let statusText = "Offline";
+    if (data.blocklist_id != null) {
+      blocklistClass = "blocked-status";
+      statusText = "🔴 Blocked";
+    }
+    statusDiv = `<div class="chat-status ${blocklistClass}" id="chatStatus" data-group-type="${data.group_type}"data-conversation-id="${conversationId}" ${userData}>${statusText}</div>`
+  } else {
+    statusDiv = ""
+  }
 
+  const disabled = data.blocklist_id != null ? `disabled=''` : ""
   mainContent = `
     <main class="main-content">
     <div class="chat-header" onclick="openUserProfile()" >
@@ -197,7 +211,8 @@ function createMessageContainer(data) {
         </div>
       </div>
     </div>
-    <div class="messages-container" id="messagesContainer"></div>
+    <div class="messages-container" id="messagesContainer">
+    </div>
     <div id="replyBar" class="reply-bar" style="display: none;">
       <div class="reply-bar-info">
         <div class="reply-bar-sender" id="replyBarSender">Replying to...</div>
@@ -209,15 +224,15 @@ function createMessageContainer(data) {
     </div>
     <div id="draftPreviewArea" class="attachment-preview-area" style="display: none;"></div>
     <div class="input-area">
-    <div class="input-wrapper"><input type="text" class="msg-input" id="messageInput" placeholder="Type a message...">
-    <button class="attach-btn" id="attachFileBtn">
+    <div class="input-wrapper"><input type="text" class="msg-input" id="messageInput" placeholder="Type a message..." ${disabled}>
+    <button class="attach-btn" id="attachFileBtn" ${disabled}>
   <svg width = "22" viewBox = "0 0 24 24" fill = "none" stroke = "#475569" >
     <path d = "M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" stroke - width = "1.6" / >
     </svg>
     </button>
-    <input type="file" id="fileInput" style="display:none">
+    <input type="file" id="fileInput" style="display:none" >
     </div>
-    <button class="send-button" id="sendBtn" onclick="sendMessage()"><svg width="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+    <button class="send-button" id="sendBtn" onclick="sendMessage()" ${disabled}><svg width="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
     </svg></button></div>
   </main>
   `
@@ -277,6 +292,7 @@ async function joinConversation(conversationId, conversationType) {
 
 function populateConversationMessages(data) {
   const messagesContainer = document.getElementById("messagesContainer")
+  console.log('conversation data', data)
   data.group_chats.forEach(message => {
     const date = new Date(message.created);
     const hour = date.getHours();
@@ -310,6 +326,13 @@ function populateConversationMessages(data) {
     </div>`
     messagesContainer.insertAdjacentHTML("beforeend", msg)
   })
+
+  if (data.blocklist_id != null) {
+
+    message = `<div class="system-message"><div class="system-bubble">⚠️ You have Blocked ${data.conversation_name} <button class="unblock-suggestion-btn" style="background:#dc2626;" onclick="blockConversation('${data.conversation_name}',${data.conversation_id}, ${data.id}, ${data.blocklist_id}, false)">Unblock User</button></div></div>`
+    messagesContainer.insertAdjacentHTML("beforeend", message)
+  }
+
 }
 
 async function sendMessage() {
@@ -470,17 +493,14 @@ async function openUserProfile() {
   const conversationType = ChatHeader.dataset.groupType;
 
   const userIdData = conversationType == "direct" && userId != "undefined" ? userId : null
-  console.log("userData", userIdData)
   if (userIdData != null) {
     url = `api/conversation/${conversationType}/user/${userIdData}/profile/`;
   } else {
     url = `api/conversation/${conversationType}/profile/${conversationId}`;
   }
-  console.log(url)
   const response = await auth.authenticatedRequest(url, null, "GET")
   const data = await response.json()
   const blocklistID = data.blocklist_id
-  console.log("type blocklist id", typeof data.blocklist_id, blocklistID, typeof blocklistID)
   const memberDiv = conversationType == "direct" ? "" : `<div class="profile-modal-members" id="modalMembers">${data.members} subscribers</div>`
   const modalContent = `
   <div class="profile-modal">
@@ -505,7 +525,7 @@ async function openUserProfile() {
             <svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
           </button>
           <div class="dropdown-menu" id="dropdownMenu" >
-            <div class="dropdown-item" id="blockUserBtn" onclick="blockConversation('${data.conversation_name}',${data.conversation_id}, ${data.id}, ${data.blocklist_id})">
+            <div class="dropdown-item" id="blockUserBtn" onclick="blockConversation('${data.conversation_name}',${data.conversation_id}, ${data.id}, ${data.blocklist_id}, true)">
               <svg width="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M4 4l16 16"/></svg>
               ${data.blocklist_id!= null ?"UnBlock":"Block"} User
             </div>
@@ -559,12 +579,11 @@ function hideDropDownMenu() {
 }
 
 
-async function blockConversation(conversationName, conversationId, userId, blocklistID = null) {
-  console.log(blocklistID, typeof blocklistID)
+async function blockConversation(conversationName, conversationId, userId, blocklistID = null, displayProfile = false) {
   if (blocklistID == null) {
     // Show confirmation modal BEFORE blocking
 
-    showBlockConfirmation(conversationName, async () => {
+    showBlockConfirmation(conversationName, "block", async () => {
 
 
       // re-render maybe update chat list if needed
@@ -575,7 +594,6 @@ async function blockConversation(conversationName, conversationId, userId, block
         })
 
       } else {
-        console.log("else")
         body = JSON.stringify({
           "conversation": conversationId,
         })
@@ -585,16 +603,28 @@ async function blockConversation(conversationName, conversationId, userId, block
       if (response.ok) {
         hideBlockConfirmation();
         openUserProfile()
+        openNav("direct", () => {
+          openChat(conversationId)
+        })
+
       }
 
     });
   } else {
-    const response = await auth.authenticatedRequest(`api/blocklist/toggle/${blocklistID}/`, "", "DELETE")
-    if (response.ok) {
-      openUserProfile()
-      alert(`You have unblocked ${userId}`);
+    showBlockConfirmation(conversationName, "unblock", async () => {
 
-    }
+      const response = await auth.authenticatedRequest(`api/blocklist/toggle/${blocklistID}/`, "", "DELETE")
+      if (response.ok) {
+        if (displayProfile) {
+
+          openUserProfile()
+        }
+        openNav("direct", () => {
+          openChat(conversationId)
+        })
+
+      }
+    })
   }
 
 
@@ -605,9 +635,24 @@ async function blockConversation(conversationName, conversationId, userId, block
 const blockConfirmModal = document.getElementById("blockConfirmModal");
 let pendingBlockAction = null; // store the callback for actual block
 
-function showBlockConfirmation(userName, onConfirm) {
+function showBlockConfirmation(userName, action, onConfirm) {
   const descEl = document.getElementById("confirmBlockDesc");
-  descEl.innerHTML = `You are about to block <strong>${escapeHtml(userName)}</strong>. They will no longer be able to message you, and you won't see their messages. You can unblock later from the profile menu.`;
+  const confirmationBtn = document.getElementById("confirmBlockBtn")
+  const confirmationTitle = document.querySelector(".confirmation-title")
+  let message = "";
+  if (action == "block") {
+    message = `You are about to block <strong>${escapeHtml(userName)}</strong>. They will no longer be able to message you, and you won't see their messages. You can unblock later from the profile menu.`;
+    confirmationBtn.innerText = "Block"
+    confirmationTitle.innerText = "Block User?"
+  } else {
+    message = `You are about to unblock <strong>${escapeHtml(userName)}</strong>. `;
+    confirmationBtn.innerText = "UnBlock"
+    confirmationTitle.innerText = "UnBlock User?"
+
+
+
+  }
+  descEl.innerHTML = message
   blockConfirmModal.classList.add("active");
   pendingBlockAction = onConfirm;
 }

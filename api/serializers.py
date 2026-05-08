@@ -63,12 +63,13 @@ class ConversationSerializer(serializers.ModelSerializer):
 	last_message = serializers.SerializerMethodField()
 	current_user = serializers.SerializerMethodField()
 	bio = serializers.SerializerMethodField()
+	blocklist_id = serializers.SerializerMethodField()
 
 
 	class Meta:
 		model = Conversation
-		fields = ["conversation_id", "current_user", "name","conversation_name", "bio", "conversation_image","last_message","created_by", "group_type", "group_chats"]
-		read_only_fields = ["conversation_id", "bio","conversation_image", "last_message","created_by"]
+		fields = ["conversation_id", "current_user", "name","conversation_name", "bio", "conversation_image","last_message","created_by", "group_type", "group_chats", "blocklist_id"]
+		read_only_fields = ["conversation_id", "bio","conversation_image", "last_message","created_by", "blocklist_id"]
 
 	def get_conversation_name(self, obj):
 
@@ -113,6 +114,22 @@ class ConversationSerializer(serializers.ModelSerializer):
 			return [other_user.profile.bio for other_user in obj.other_users][0]
 		else:
 			return obj.bio
+			
+	def get_direct_other_user(self, obj):
+		request = self.context["request"]
+
+		if obj.members.exclude(user=request.user).exists():
+			return obj.members.exclude(user=request.user)[0].user
+		else:
+			return None
+	def get_blocklist_id(self, obj):
+		request = self.context["request"]
+		try:
+			other_user = self.get_direct_other_user(obj)
+			q = (Q(user=request.user) & Q(conversation=obj))|(Q(user=request.user) & Q(blocked_user=other_user))
+			return BlockList.objects.get(q).id
+		except BlockList.DoesNotExist:
+			return None
 
 	def to_internal_value(self, data):
 		data = data.copy()
