@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import UniqueConstraint, Q
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import AbstractUser
 
@@ -6,7 +7,8 @@ from django.contrib.auth.models import AbstractUser
 
 class User(AbstractUser):
 	email = models.EmailField(_("email address"), blank=True, unique=True)
-	username = models.EmailField(_("username"), blank=True, null=True)
+	username = models.CharField(_("username"), max_length=150)
+	
 
 
 
@@ -15,6 +17,13 @@ class User(AbstractUser):
 
 	class Meta(AbstractUser.Meta):
 		ordering = ["-date_joined"]
+		constraints = [
+			UniqueConstraint(
+					fields = ["username"],
+					condition=~Q(username=""),
+					name="unique_username"
+				)
+		]
 
 class Profile(models.Model):
 
@@ -24,7 +33,7 @@ class Profile(models.Model):
 	bio = models.CharField(_("Bio"), max_length=200, blank=True)
 	
 	def __str__(self):
-		return f'"{self.user.get_full_name()}" profile'
+		return f'{self.user.username}-"{self.user.get_full_name()}" profile'
 
 
 	class Meta:

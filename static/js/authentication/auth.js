@@ -17,12 +17,12 @@ class Auth {
 		return data
 
 	}
-	async fetchPost(url, body, headers = {}) {
-
+	async fetchPost(method, url, body, headers = {}, contentType = "application/json") {
+		console.log("method:", method, "url:", url)
 		const response = await fetch(url, {
-			method: "POST",
+			method: method,
 			headers: {
-				"Content-Type": "application/json",
+				"Content-Type": contentType,
 				...headers,
 			},
 			body: body
@@ -32,10 +32,25 @@ class Auth {
 
 
 	}
-	async fetchGET(url, body, headers = {}) {
+
+	async fetchFormPost(method, url, body, headers = {}) {
 
 		const response = await fetch(url, {
-			method: "GET",
+			method: method,
+			headers: {
+				...headers,
+			},
+			body: body
+		})
+
+		return response
+
+
+	}
+	async fetchGET(method, url, body, headers = {}) {
+
+		const response = await fetch(url, {
+			method: method,
 			headers: {
 				...headers,
 			},
@@ -45,10 +60,10 @@ class Auth {
 
 
 	}
-	async fetchDELETE(url, body, headers = {}) {
+	async fetchDELETE(method, url, body, headers = {}) {
 
 		const response = await fetch(url, {
-			method: "DELETE",
+			method: method,
 			headers: {
 				...headers,
 			},
@@ -67,7 +82,7 @@ class Auth {
 		})
 		try {
 
-			const response = await this.fetchPost(this.loginAPIUrl, body)
+			const response = await this.fetchPost("POST", this.loginAPIUrl, body)
 
 			if (!response.ok) {
 
@@ -112,7 +127,7 @@ class Auth {
 			"refresh": this.refreshToken
 		})
 		try {
-			const response = await this.fetchPost(refreshUrl, body)
+			const response = await this.fetchPost("POST", refreshUrl, body)
 
 			if (!response.ok) {
 				throw new Error('Token refresh failed');
@@ -128,20 +143,24 @@ class Auth {
 
 		}
 	}
-	async authenticatedRequest(url, body, fetchType = "POST", header_kwargs = {}) {
+	async authenticatedRequest(url, body, fetchType = "POST", header_kwargs = {}, contentType = "application/json") {
+		console.log("contentType", contentType)
 		let fetchObject = this.fetchPost
 		if (fetchType == "GET") {
 
 			fetchObject = this.fetchGET
 		} else if (fetchType == "DELETE") {
 			fetchObject = this.fetchDELETE
+		} else if (fetchType == "PATCH") {
+			fetchObject = this.fetchFormPost
 		}
 
 		let headers = {
 			"Authorization": `Bearer ${this.accessToken}`,
 			...header_kwargs
 		}
-		let response = await fetchObject(url, body, headers)
+		console.log("authenticate request:", fetchType, url, body)
+		let response = await fetchObject(fetchType, url, body, headers)
 		if (response.status === 401) {
 			const refreshed = await this.refreshAccessToken();
 
@@ -149,7 +168,7 @@ class Auth {
 				headers = {
 					"Authorization": `Bearer ${this.accessToken}`
 				}
-				response = await fetchObject(url, body, headers)
+				response = await fetchObject(fetchType, url, body, headers, contentType)
 
 			} else {
 				this.logout()

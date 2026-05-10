@@ -3,6 +3,7 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 from chat.models import Conversation, Chat, ConversationMember, BlockList
+from account.models import Profile
 
 UserModel = get_user_model()
 
@@ -17,7 +18,12 @@ class UserSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = UserModel
-		fields = ["id", "username", "conversation_name", "conversation_image", "group_type", "bio", "blocklist_id"]
+		fields = ["id", "username", "email", "first_name", "last_name", "conversation_name", "conversation_image", "group_type", "bio", "blocklist_id"]
+		extra_kwargs = {
+			"username" : {"validators":[]},
+			"email" : {"validators":[]},
+
+		}
 	def get_conversation_name(self, obj):
 			return obj.username
 
@@ -36,6 +42,22 @@ class UserSerializer(serializers.ModelSerializer):
 			return BlockList.objects.get(user=request.user, blocked_user=obj).id
 		except BlockList.DoesNotExist:
 			return None
+
+	def validate_username(self, value):
+		user = self.context["request"].user
+		if UserModel.objects.exclude(pk=user.pk if user else None).filter(username=value).exists():
+			raise serializers.ValidationError("**This username already exists.")
+
+		return value
+
+	def validate_email(self, value):
+		user = self.context["request"].user
+
+		if UserModel.objects.exclude(pk=user.pk if user else None).filter(email=value).exists():
+			raise serializers.ValidationError("--This username already exists.")
+
+		return value
+
 class MessageSerializer(serializers.ModelSerializer):
 	user = UserSerializer(read_only=True)
 	reply_to = serializers.SerializerMethodField()
@@ -291,3 +313,23 @@ class BlockListSerializer(serializers.ModelSerializer):
 			block_list = BlockList.objects.create(user=user, blocked_user=blocked_user)
 
 		return block_list
+
+
+
+
+class AccountProfileSerializer(serializers.ModelSerializer):
+	user = UserSerializer()
+	class Meta:
+		model = Profile
+		fields = ["user", "profile_image", "birth_day", "bio"]
+
+	def update(self, instance, validated_data):
+		user_data = validated_data.pop("user", None)
+		if user_data:
+			user = instance.user
+			for attr, value in user_data.items():
+				setattr(user, attr, value)
+			user.save()
+
+		return super().update(instance, validated_data)
+

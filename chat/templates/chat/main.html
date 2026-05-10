@@ -40,9 +40,8 @@
 <div class="drawer-overlay" id="drawerOverlay"></div>
 <div class="drawer" id="drawerMenu">
   <div class="drawer-profile">
-    <div class="drawer-avatar" id="drawerAvatarImg"></div>
+    <div class="drawer-avatar" id="drawerAvatarImg"><img src="{{request.user.profile.get_image}}" alt="{{request.user.username}}"></div>
     <div class="drawer-username" id="drawerUsername"></div>
-    <button class="change-photo-btn" id="changePhotoBtn">Change photo</button>
     <input type="file" id="avatarUploadInput" style="display:none" accept="image/*">
   </div>
   <div class="drawer-divider"></div>
@@ -51,7 +50,7 @@
       <svg width="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14" stroke-width="1.6"/><circle cx="12" cy="12" r="10"/></svg>
       Create Group / Channel
     </div>
-    <div class="drawer-item" id="drawerAccountBtn">
+    <div class="drawer-item" id="drawerAccountBtn" onclick="window.location.href='{%url 'account:user_account'%}'">
       <svg width="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zM20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke-width="1.6"/></svg>
       Account
     </div>

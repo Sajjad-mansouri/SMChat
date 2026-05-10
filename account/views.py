@@ -188,3 +188,5 @@ class PasswordResetCompleteView(auth_views.PasswordResetCompleteView):
     template_name = "account/registration/pass_reset_complete.html"
 
 
+class UserAccountView(LoginRequiredMixin, TemplateView):
+    template_name = "account/account/account.html"

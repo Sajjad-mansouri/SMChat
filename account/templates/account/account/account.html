@@ -1,0 +1,482 @@
+{%load static%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Account Settings</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      background: linear-gradient(135deg, #eef2f8 0%, #e8edf3 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .account-container {
+      max-width: 800px;
+      width: 100%;
+      background: #ffffff;
+      border-radius: 48px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      overflow: hidden;
+      animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .account-header {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      padding: 40px 40px 30px;
+      color: white;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 14px;
+      margin-bottom: 24px;
+      transition: 0.2s;
+    }
+
+    .back-link:hover {
+      color: white;
+      transform: translateX(-4px);
+    }
+
+    .account-header h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    .account-header p {
+      color: #94a3b8;
+      font-size: 15px;
+    }
+
+    .account-content {
+      padding: 40px;
+    }
+
+    /* Profile Section */
+    .profile-section {
+      display: flex;
+      gap: 32px;
+      align-items: center;
+      margin-bottom: 40px;
+      flex-wrap: wrap;
+      padding-bottom: 32px;
+      border-bottom: 2px solid #f1f5f9;
+    }
+
+    .avatar-wrapper {
+      position: relative;
+      cursor: pointer;
+    }
+
+    .avatar-img {
+      width: 120px;
+      height: 120px;
+      border-radius: 60px;
+      object-fit: cover;
+      background: linear-gradient(145deg, #2563eb, #3b82f6);
+      box-shadow: 0 12px 24px -10px rgba(37, 99, 235, 0.3);
+      transition: all 0.3s ease;
+      display: block;
+    }
+
+    .avatar-img:hover {
+      transform: scale(1.02);
+      box-shadow: 0 16px 32px -12px rgba(37, 99, 235, 0.4);
+    }
+
+    .profile-info h2 {
+      font-size: 28px;
+      font-weight: 650;
+      margin-bottom: 6px;
+    }
+
+    .profile-info p {
+      color: #64748b;
+      margin-bottom: 12px;
+    }
+
+    .change-photo-btn {
+      background: #f1f5f9;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 40px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .change-photo-btn:hover {
+      background: #e2e8f0;
+    }
+
+    /* Settings Cards - All values are inputs directly */
+    .settings-card {
+      background: #f9fafc;
+      border-radius: 28px;
+      padding: 28px;
+      margin-bottom: 24px;
+      border: 1px solid #eef2f8;
+      transition: 0.2s;
+    }
+
+    .settings-card:hover {
+      border-color: #e2e8f0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+    }
+
+    .setting-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 0;
+      border-bottom: 1px solid #eef2f8;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .setting-row:last-child {
+      border-bottom: none;
+    }
+
+    .setting-label {
+      font-weight: 600;
+      color: #1e293b;
+      font-size: 15px;
+      min-width: 110px;
+    }
+
+    /* Input styles */
+    .value-input {
+      flex: 1;
+      padding: 10px 16px;
+      border-radius: 32px;
+      border: 1px solid #e2e8f0;
+      font-size: 14px;
+      font-family: inherit;
+      background: white;
+      transition: all 0.2s;
+      max-width: 320px;
+    }
+
+    .value-input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+    }
+
+    .value-input:hover {
+      border-color: #cbd5e1;
+    }
+
+    /* For name row: two inputs side by side */
+    .name-group {
+      flex: 1;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .name-input {
+      flex: 1;
+      min-width: 130px;
+      padding: 10px 16px;
+      border-radius: 32px;
+      border: 1px solid #e2e8f0;
+      font-size: 14px;
+      font-family: inherit;
+      background: white;
+      transition: all 0.2s;
+    }
+
+    .name-input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+    }
+
+    /* Date input specific */
+    .date-input {
+      flex: 1;
+      max-width: 200px;
+      padding: 10px 16px;
+      border-radius: 32px;
+      border: 1px solid #e2e8f0;
+      font-size: 14px;
+      font-family: inherit;
+      background: white;
+      cursor: pointer;
+    }
+
+    .date-input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+    }
+
+    .theme-select, .lang-select {
+      padding: 10px 16px;
+      border-radius: 32px;
+      border: 1px solid #cbd5e1;
+      background: white;
+      font-size: 14px;
+      cursor: pointer;
+      outline: none;
+      min-width: 160px;
+    }
+
+    .danger-zone {
+      border: 1px solid #fee2e2;
+      background: #fffaf9;
+    }
+
+    .danger-zone .setting-label {
+      color: #dc2626;
+    }
+
+    .delete-btn {
+      background: #fee2e2;
+      color: #dc2626;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 40px;
+      font-weight: 500;
+      font-size: 14px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .delete-btn:hover {
+      background: #fecaca;
+      transform: scale(0.98);
+    }
+
+    .save-all-btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 14px 32px;
+      border-radius: 48px;
+      font-weight: 600;
+      font-size: 15px;
+      cursor: pointer;
+      transition: 0.2s;
+      width: 100%;
+      margin-top: 16px;
+    }
+
+    .save-all-btn:hover {
+      background: #1d4ed8;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(37, 99, 235, 0.25);
+    }
+
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 360px;
+      pointer-events: none;
+    }
+
+    .toast-message {
+      background: #22c55e;
+      color: white;
+      padding: 14px 20px;
+      border-radius: 48px;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      animation: slideInRight 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      pointer-events: auto;
+      word-break: break-word;
+      line-height: 1.4;
+      transition: all 0.2s ease;
+    }
+
+    .toast-message.toast-error {
+      background: #dc2626;
+      box-shadow: 0 8px 20px rgba(220, 38, 38, 0.25);
+    }
+
+    .toast-message.toast-warning {
+      background: #f97316;
+    }
+
+    .toast-message.toast-info {
+      background: #3b82f6;
+    }
+
+    /* Multi-error specific style for error list */
+    .toast-message.error-list {
+      background: #7f1d1d;
+      padding: 16px 20px;
+      border-radius: 24px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .toast-message.error-list strong {
+      font-size: 13px;
+      opacity: 0.9;
+      letter-spacing: 0.3px;
+    }
+
+    .toast-message.error-list ul {
+      margin: 4px 0 0 20px;
+      font-size: 13px;
+      font-weight: 400;
+      opacity: 0.95;
+    }
+
+    .toast-message.error-list li {
+      margin: 4px 0;
+    }
+
+    .toast-icon {
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(100px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .account-content { padding: 24px; }
+      .profile-section { flex-direction: column; text-align: center; }
+      .setting-row { flex-direction: column; align-items: flex-start; }
+      .value-input { max-width: 100%; width: 100%; }
+      .name-group { width: 100%; }
+      .name-input { width: 100%; }
+      .date-input { max-width: 100%; width: 100%; }
+      .toast-container {
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+        max-width: none;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="account-container">
+  <div class="account-header">
+    <a  class="back-link" href="{%url 'chat:index'%}">
+      <svg width="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Back to Chats
+    </a>
+    <h1>Account Settings</h1>
+    <p>Edit your info — changes are saved automatically</p>
+  </div>
+
+  <div class="account-content">
+    <!-- Profile Section with <img> for avatar -->
+    <div class="profile-section">
+      <div class="avatar-wrapper">
+        <img id="accountAvatarImg" class="avatar-img" src="{{request.user.profile.get_image}}" alt="avatar">
+      </div>
+      <div class="profile-info">
+        <h2 id="displayNamePreview">{{request.get_full_name}}</h2>
+        <p id="userEmailPreview">{{request.user.email}}</p>
+        <button class="change-photo-btn" id="changePhotoBtn">📷 Change photo</button>
+        <input type="file" id="avatarUpload" style="display:none" accept="image/*">
+      </div>
+    </div>
+
+    <!-- Settings Cards - All values are inline inputs -->
+    <div class="settings-card">
+      <!-- First Name & Last Name separate -->
+      <div class="setting-row">
+        <span class="setting-label">Full Name</span>
+        <div class="name-group">
+          <input type="text" id="firstNameInput" class="name-input" placeholder="First name" autocomplete="off" value="{{request.user.first_name}}">
+          <input type="text" id="lastNameInput" class="name-input" placeholder="Last name" autocomplete="off" value="{{request.user.last_name}}">
+        </div>
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">Username</span>
+        <input type="text" id="usernameInput" class="value-input" placeholder="Username" autocomplete="off" value="{{request.user.username}}">
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">Email Address</span>
+        <input type="email" id="emailInput" class="value-input" placeholder="your@email.com" autocomplete="off" value="{{request.user.email}}">
+      </div>
+
+      <!-- Birthday Field -->
+      <div class="setting-row">
+        <span class="setting-label">Birthday</span>
+        <input type="date" id="birthdayInput" class="date-input" autocomplete="off" value="{{request.user.profile.birth_day|date:'Y-m-d'}}">
+      </div>
+
+      <div class="setting-row">
+        <span class="setting-label">Bio / Status</span>
+        <input type="text" id="bioInput" class="value-input" placeholder="Tell something about yourself..." autocomplete="off" value="{{request.user.profile.bio}}">
+      </div>
+    </div>
+
+    <button class="save-all-btn" id="saveAllBtn">💾 Save All Changes</button>
+
+    <div class="settings-card danger-zone">
+      <div class="setting-row">
+        <span class="setting-label">Delete Account</span>
+        <button class="delete-btn" id="deleteAccountBtn">🗑️ Delete my account</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+<div class="messages">
+  
+</div>
+<script src="{%static 'js/authentication/auth.js'%}"></script>
+<script src="{%static 'js/account/profile.js'%}"></script>
+
+</body>
+</html>

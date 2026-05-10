@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework import mixins
-from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, GenericAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, GenericAPIView, UpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db.models import Q, Value
@@ -10,14 +10,16 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import ConversationSerializer, ConversationWithMessageSerializer, UserSerializer, ConversationMemberSerializer, ConversationProfileSerializer, BlockListSerializer
+from rest_framework.parsers import FormParser, MultiPartParser
+from . import serializers
 from chat.models import Conversation, ConversationMember, Chat, BlockList
+from account.models import Profile
 from .permissions import IsMember
 
 
 UserModel = get_user_model()
 class Conversations(ListAPIView):
-	serializer_class = ConversationSerializer
+	serializer_class = serializers.ConversationSerializer
 	permission_classes = [IsAuthenticated]
 	def get_queryset(self):
 		conversation_type = self.kwargs.get("conversation_type")
@@ -36,7 +38,7 @@ class Conversations(ListAPIView):
 
 
 class ConversationDetail(RetrieveAPIView):
-	serializer_class = ConversationWithMessageSerializer
+	serializer_class = serializers.ConversationWithMessageSerializer
 	permission_classes = [IsAuthenticated, IsMember]
 	def get_queryset(self):
 		self.conversation_id = self.kwargs.get("conversation_id")
@@ -65,19 +67,19 @@ class ConversationDetail(RetrieveAPIView):
 
 	def get_serializer_class(self):
 		if isinstance(self.obj, UserModel):
-			return UserSerializer
+			return serializers.UserSerializer
 		else:
-			return ConversationWithMessageSerializer
+			return serializers.ConversationWithMessageSerializer
 
 class ConversationProfile(ConversationDetail):
 	def get_serializer_class(self):
 		if isinstance(self.obj, UserModel):
-			return UserSerializer
+			return serializers.UserSerializer
 		else:
-			return ConversationProfileSerializer	
+			return serializers.ConversationProfileSerializer	
 
 class ConversationCreateView(CreateAPIView):
-	serializer_class = ConversationSerializer
+	serializer_class = serializers.ConversationSerializer
 	permission_classes = [IsAuthenticated]
 
 class SearchView(APIView):
@@ -102,13 +104,13 @@ class SearchView(APIView):
 		return users, conversations
 
 	def get_serializer(self, user_qs, conversation_qs):
-		conversation_serializer = ConversationSerializer(
+		conversation_serializer = serializers.ConversationSerializer(
 			conversation_qs, 
 			many=True, 
 			context={'request': self.request}
 		)
 
-		user_serializer = UserSerializer(
+		user_serializer = serializers.UserSerializer(
 			user_qs,
 			many=True, 
 			context={'request': self.request}
@@ -117,13 +119,13 @@ class SearchView(APIView):
 		return conversation_serializer, user_serializer
 
 class MembershipCreateView(CreateAPIView):
-	serializer_class = ConversationMemberSerializer
+	serializer_class = serializers.ConversationMemberSerializer
 	permission_classes = [IsAuthenticated]
 
 
 
 class BlockListCreateView(CreateAPIView):
-	serializer_class = BlockListSerializer
+	serializer_class = serializers.BlockListSerializer
 	permission_classes = [IsAuthenticated]
 
 
@@ -133,7 +135,7 @@ class BlockUnblockView(
 						GenericAPIView
 						):
 
-	serializer_class = BlockListSerializer
+	serializer_class = serializers.BlockListSerializer
 	permission_classes = [IsAuthenticated]
 	def delete(self, request, *args, **kwargs):
 		return self.destroy(request, *args, **kwargs)
@@ -162,3 +164,10 @@ class LoginApiView(APIView):
 			"access": str(refresh.access_token),
 			"refresh": str(refresh)
 			})
+
+class ProfileUpdateView(UpdateAPIView):
+	serializer_class = serializers.AccountProfileSerializer
+	permission_classes = [IsAuthenticated]
+	parser_classes = [FormParser, MultiPartParser]
+	def get_object(self):
+		return self.request.user.profile

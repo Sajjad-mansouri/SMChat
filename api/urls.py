@@ -36,5 +36,7 @@ urlpatterns = [
 
 
 
-	path("login/", views.LoginApiView.as_view(), name="login")
+	path("login/", views.LoginApiView.as_view(), name="login"),
+
+	 path("update-account/", views.ProfileUpdateView.as_view(), name="update_profile"),
 ]
