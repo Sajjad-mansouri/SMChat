@@ -139,7 +139,7 @@
       background: #e2e8f0;
     }
 
-    /* Settings Cards - All values are inputs directly */
+    /* Settings Cards */
     .settings-card {
       background: #f9fafc;
       border-radius: 28px;
@@ -175,7 +175,6 @@
       min-width: 110px;
     }
 
-    /* Input styles */
     .value-input {
       flex: 1;
       padding: 10px 16px;
@@ -198,7 +197,6 @@
       border-color: #cbd5e1;
     }
 
-    /* For name row: two inputs side by side */
     .name-group {
       flex: 1;
       display: flex;
@@ -225,7 +223,6 @@
       box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
     }
 
-    /* Date input specific */
     .date-input {
       flex: 1;
       max-width: 200px;
@@ -301,6 +298,7 @@
       box-shadow: 0 6px 14px rgba(37, 99, 235, 0.25);
     }
 
+    /* Enhanced Toast Container */
     .toast-container {
       position: fixed;
       bottom: 24px;
@@ -345,7 +343,6 @@
       background: #3b82f6;
     }
 
-    /* Multi-error specific style for error list */
     .toast-message.error-list {
       background: #7f1d1d;
       padding: 16px 20px;
@@ -377,15 +374,197 @@
       flex-shrink: 0;
     }
 
-    @keyframes slideIn {
+    @keyframes slideInRight {
       from {
         opacity: 0;
-        transform: translateX(100px);
+        transform: translateX(100px) scale(0.9);
       }
       to {
         opacity: 1;
+        transform: translateX(0) scale(1);
+      }
+    }
+
+    @keyframes fadeOut {
+      from {
+        opacity: 1;
         transform: translateX(0);
       }
+      to {
+        opacity: 0;
+        transform: translateX(30px);
+      }
+    }
+
+    .toast-message.removing {
+      animation: fadeOut 0.2s ease forwards;
+    }
+
+    /* ----- MODAL STYLES ----- */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(6px);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.25s ease, visibility 0.25s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal-container {
+      background: white;
+      max-width: 480px;
+      width: 90%;
+      border-radius: 40px;
+      box-shadow: 0 30px 50px -20px rgba(0, 0, 0, 0.4);
+      overflow: hidden;
+      transform: scale(0.96);
+      transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    }
+
+    .modal-overlay.active .modal-container {
+      transform: scale(1);
+    }
+
+    .modal-header {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      padding: 28px 28px 20px;
+      color: white;
+    }
+
+    .modal-header h3 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .modal-header h3 span {
+      font-size: 28px;
+    }
+
+    .modal-body {
+      padding: 28px;
+    }
+
+    .warning-message {
+      background: #fff5f0;
+      border-left: 5px solid #dc2626;
+      padding: 16px;
+      border-radius: 24px;
+      margin-bottom: 24px;
+      font-size: 14px;
+      color: #7f1a1a;
+    }
+
+    .warning-message p {
+      margin-bottom: 8px;
+    }
+
+    .warning-message strong {
+      color: #b91c1c;
+    }
+
+    .confirm-input-group {
+      margin: 20px 0 16px;
+    }
+
+    .confirm-input-group label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #334155;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .confirm-code {
+      background: #f1f5f9;
+      padding: 10px 14px;
+      border-radius: 28px;
+      font-family: monospace;
+      font-weight: 700;
+      letter-spacing: 1px;
+      font-size: 18px;
+      display: inline-block;
+      user-select: all;
+      margin: 8px 0;
+      border: 1px solid #e2e8f0;
+    }
+
+    .confirm-input {
+      width: 100%;
+      padding: 14px 18px;
+      border-radius: 48px;
+      border: 1px solid #cbd5e1;
+      font-size: 15px;
+      font-family: inherit;
+      transition: all 0.2s;
+      background: white;
+    }
+
+    .confirm-input:focus {
+      outline: none;
+      border-color: #dc2626;
+      box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 14px;
+      justify-content: flex-end;
+      margin-top: 28px;
+    }
+
+    .modal-btn {
+      padding: 12px 24px;
+      border-radius: 48px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .modal-btn-cancel {
+      background: #eef2ff;
+      color: #1e293b;
+    }
+
+    .modal-btn-cancel:hover {
+      background: #e2e8f0;
+      transform: translateY(-1px);
+    }
+
+    .modal-btn-danger {
+      background: #dc2626;
+      color: white;
+      box-shadow: 0 2px 8px rgba(220, 38, 38, 0.2);
+    }
+
+    .modal-btn-danger:hover:not(:disabled) {
+      background: #b91c1c;
+      transform: translateY(-2px);
+    }
+
+    .modal-btn-danger:disabled {
+      background: #fecaca;
+      cursor: not-allowed;
+      opacity: 0.7;
+      transform: none;
     }
 
     @media (max-width: 640px) {
@@ -401,6 +580,12 @@
         right: 16px;
         bottom: 16px;
         max-width: none;
+      }
+      .modal-container {
+        width: 95%;
+      }
+      .modal-header h3 {
+        font-size: 1.5rem;
       }
     }
   </style>
@@ -474,6 +659,33 @@
 </div>
 <div class="messages">
   
+</div>
+<div id="deleteModal" class="modal-overlay">
+  <form id="delete-form" method="POST" action="{%url 'account:delete' request.user.pk %}">
+    {%csrf_token%}
+    
+  </form>
+  <div class="modal-container">
+    <div class="modal-header">
+      <h3><span>⚠️</span> Delete Account</h3>
+      <p style="margin-top: 8px; opacity: 0.8;">This action is permanent</p>
+    </div>
+    <div class="modal-body">
+      <div class="warning-message">
+        <p><strong>🔒 Data loss warning:</strong> All your messages, contacts, and personal data will be erased forever. This cannot be undone.</p>
+        <p style="margin-top: 6px; font-size: 13px;">To confirm deletion, please type <strong>DELETE</strong> in the field below.</p>
+      </div>
+      <div class="confirm-input-group">
+        <label>Confirmation keyword:</label>
+        <div class="confirm-code">DELETE</div>
+        <input type="text" id="modalConfirmInput" class="confirm-input" placeholder='Type "DELETE" here' autocomplete="off">
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" id="modalCancelBtn">Cancel</button>
+        <button class="modal-btn modal-btn-danger" id="modalConfirmDeleteBtn" disabled>Permanently delete</button>
+      </div>
+    </div>
+  </div>
 </div>
 <script src="{%static 'js/authentication/auth.js'%}"></script>
 <script src="{%static 'js/account/profile.js'%}"></script>

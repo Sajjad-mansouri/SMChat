@@ -5,6 +5,8 @@ app_name = "account"
 
 urlpatterns = [
  path("", views.UserAccountView.as_view(), name="user_account"),
+ path("delete/user/<int:pk>/", views.UserAccountDeleteView.as_view(), name="delete"),
+
 
 ]
 

@@ -11,7 +11,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth import views as auth_views
-from django.views.generic.edit import CreateView
+from django.views.generic.edit import CreateView, DeleteView
 from django.views.generic.base import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 
@@ -190,3 +190,7 @@ class PasswordResetCompleteView(auth_views.PasswordResetCompleteView):
 
 class UserAccountView(LoginRequiredMixin, TemplateView):
     template_name = "account/account/account.html"
+
+class UserAccountDeleteView(LoginRequiredMixin, DeleteView):
+    model = UserModel
+    success_url = reverse_lazy("account:login")

@@ -172,3 +172,58 @@ document.getElementById("avatarUpload").addEventListener("change", function() {
   }
   reader.readAsDataURL(file)
 })
+
+
+
+const modal = document.getElementById("deleteModal");
+const modalConfirmInput = document.getElementById("modalConfirmInput");
+const modalConfirmBtn = document.getElementById("modalConfirmDeleteBtn");
+const modalCancelBtn = document.getElementById("modalCancelBtn");
+const deleteTriggerBtn = document.getElementById("deleteAccountBtn");
+
+function openDeleteModal() {
+  modal.classList.add("active");
+  modalConfirmInput.value = "";
+  modalConfirmBtn.disabled = true;
+  modalConfirmInput.focus();
+}
+
+function closeDeleteModal() {
+  modal.classList.remove("active");
+}
+
+function handleDeleteConfirmation() {
+  const typedValue = modalConfirmInput.value.trim();
+  if (typedValue === "DELETE") {
+    // Permanent deletion
+
+    closeDeleteModal();
+    showToast("Account permanently deleted. Redirecting...", "info", 2000);
+    setTimeout(() => {
+      document.getElementById("delete-form").submit()
+    }, 1600);
+  } else {
+    showToast("Deletion cancelled — confirmation keyword does not match", "error", 3500);
+    closeDeleteModal();
+  }
+}
+
+// Enable/disable confirm button based on input
+modalConfirmInput.addEventListener("input", (e) => {
+  const isValid = e.target.value.trim() === "DELETE";
+  modalConfirmBtn.disabled = !isValid;
+});
+
+deleteTriggerBtn.addEventListener("click", openDeleteModal);
+modalCancelBtn.addEventListener("click", closeDeleteModal);
+modalConfirmBtn.addEventListener("click", handleDeleteConfirmation);
+
+// Close modal on overlay click (but not on container)
+modal.addEventListener("click", (e) => {
+  if (e.target === modal) closeDeleteModal();
+});
+
+document.addEventListener("keydown", (e) => {
+  if (modal.classList.contains("active") && e.key === "Escape") closeDeleteModal();
+  if (modal.classList.contains("active") && e.key === "Enter" && !modalConfirmBtn.disabled) handleDeleteConfirmation();
+});
