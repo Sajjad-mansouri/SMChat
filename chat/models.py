@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -73,12 +74,13 @@ class ConversationMember(models.Model):
 			)
 		]
 def file_path(instance, file_name):
+	date = instance.created or timezone.now()
 	return "chat/{user_id}/{conversation_id}/{year}/{month}/{day}/{file_name}".format(
 										user_id=instance.user.id,
 										conversation_id=instance.conversation.id, 
-										year = instance.updated.year,
-										month = instance.updated.month,
-										day = instance.updated.day,
+										year = date.year,
+										month = date.month,
+										day = date.day,
 										file_name = file_name)
 
 

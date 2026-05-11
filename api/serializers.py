@@ -71,8 +71,8 @@ class MessageSerializer(serializers.ModelSerializer):
 					"user_username":obj.reply_to.user.username, 
 					"id":obj.reply_to.id, 
 					"text":obj.reply_to.text,
-					"file":obj.reply_to.file if obj.reply_to.file else None,
-					"image":obj.reply_to.image if obj.reply_to.image else None,
+					"file":obj.reply_to.file.url if obj.reply_to.file else None,
+					"image":obj.reply_to.image.url if obj.reply_to.image else None,
 					"created":obj.reply_to.created
 					}
 		else:

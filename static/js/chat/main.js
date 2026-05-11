@@ -225,7 +225,7 @@ function createMessageContainer(data) {
     <div id="draftPreviewArea" class="attachment-preview-area" style="display: none;"></div>
     <div class="input-area">
     <div class="input-wrapper"><input type="text" class="msg-input" id="messageInput" placeholder="Type a message..." ${disabled}>
-    <button class="attach-btn" id="attachFileBtn" ${disabled}>
+    <button class="attach-btn" id="attachFileBtn" ${disabled} onclick="attachFileBtn()">
   <svg width = "22" viewBox = "0 0 24 24" fill = "none" stroke = "#475569" >
     <path d = "M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" stroke - width = "1.6" / >
     </svg>
@@ -299,6 +299,28 @@ function populateConversationMessages(data) {
     const minute = date.getMinutes();
     const timeWithLeadingZeros = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
     let replyHtml;
+    let messageContent;
+    if (message.image) {
+      messageContent = `
+      <img src="${message.image}" class="chat-image">
+      <div class="caption-text">${escapeHtml(message.text)}</div>
+      `
+
+    } else if (message.file) {
+      messageContent = `
+      <a href = "${message.file}"
+      download = "${message.file.split('/').pop()}"
+      class = "file-attachment" >  
+
+      <svg width = "20"viewBox = "0 0 24 24"fill = "none"
+      stroke = "currentColor" > <path d = "M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM13 2v7h7" stroke - width = "1.6" /> 
+      </svg> ${message.file.split('/').pop()}
+      </a>
+      <div class="caption-text">${escapeHtml(message.text)}</div>
+      `
+    } else {
+      messageContent = message.text
+    }
     if (message.reply_to) {
       replyHtml = `
           <div class="reply-preview">
@@ -314,7 +336,7 @@ function populateConversationMessages(data) {
       <div class="message-sender">${message.user.username}</div>
       <div class="bubble">
       ${replyHtml}
-      ${message.text}
+      ${messageContent}
         <div class="message-time">${timeWithLeadingZeros}</div>
       <div class="message-actions">
         <button class="action-icon-btn reply-msg-btn" data-id="${message.id}" data-sender="${message.user.id === data.current_user ? 'You' : message.user.username}" data-preview="${getMessagePreview(message).replace(/"/g, '&quot;')}" onclick="reply()">
@@ -470,16 +492,6 @@ function showReplyBar(messageId, senderName, previewText) {
 function hideReplyBar() {
   replyingTo = null;
   document.getElementById('replyBar').style.display = 'none';
-}
-
-function escapeHtml(str) {
-  if (!str) return '';
-  return String(str).replace(/[&<>]/g, function(m) {
-    if (m === '&') return '&amp;';
-    if (m === '<') return '&lt;';
-    if (m === '>') return '&gt;';
-    return m;
-  });
 }
 
 
@@ -673,3 +685,87 @@ document.getElementById("confirmBlockBtn").addEventListener("click", () => {
 blockConfirmModal.addEventListener("click", (e) => {
   if (e.target === blockConfirmModal) hideBlockConfirmation();
 });
+
+
+
+// file and image upload
+
+function attachFileBtn() {
+  document.getElementById("fileInput")?.click()
+  document.getElementById("fileInput")?.addEventListener("change", e => {
+    handleFileUpload(e.target.files);
+    e.target.value = '';
+  }, {
+    once: true
+  });
+}
+
+
+function cancelDraft() {
+  pendingDraft = null;
+  const area = document.getElementById("draftPreviewArea");
+  if (area) {
+    area.style.display = "none";
+    area.innerHTML = "";
+  }
+}
+
+function handleFileUpload(files) {
+  if (!files.length) return;
+  const f = files[0];
+  const isImg = f.type.startsWith('image/');
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    pendingDraft = {
+      file: f,
+    };
+    showDraft(f, e.target.result, isImg ? 'image' : 'file', f.name);
+  };
+  reader.readAsDataURL(f);
+}
+
+function showDraft(file, url, type, fileName) {
+  const area = document.getElementById("draftPreviewArea");
+  if (!area) return;
+  area.style.display = "flex";
+  area.innerHTML = `<div class="draft-file">${type === 'image' ? `<img src="${url}" style="width:48px;height:48px;">` : `<svg width="32" viewBox="0 0 24 24" fill="none" stroke="#2563eb"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM13 2v7h7"/></svg>`}<div><strong>${fileName}</strong></div><button class="remove-draft" id="removeDraftBtn">✕</button></div><div class="caption-input-area"><input type="text" class="caption-input" id="draftCaption" placeholder="Add caption..."><button id="sendDraftBtn" class="send-draft-btn">Send</button><button id="cancelDraftBtn" class="cancel-draft-btn">Cancel</button></div>`;
+  document.getElementById("removeDraftBtn")?.addEventListener("click", cancelDraft);
+  document.getElementById("cancelDraftBtn")?.addEventListener("click", cancelDraft);
+  document.getElementById("sendDraftBtn")?.addEventListener("click", () => sendMessageWithDraft());
+}
+
+async function sendMessageWithDraft() {
+  if (pendingDraft) {
+    const caption = document.getElementById("draftCaption")?.value || "";
+    const d = pendingDraft;
+
+    if (conversationId == "undefined") {
+      // if we dont have previous chat with this user first create conversation and add users to it then create socker
+      const userId = document.getElementById("chatName").dataset.userId
+      const response = await createConversation("", "direct", userId)
+      if (response.ok) {
+        const data = await response.json()
+        conversationId = data.conversation_id
+        openNav("direct", () => {
+          console.log("conversionId", conversationId)
+          createSocket(data, caption)
+
+          document.querySelector(`.chat-item[data-conversation-id="${conversationId}"]`).classList.add("active-chat")
+        })
+
+      }
+    } else {
+      console.log("send file")
+      const chatSocket = activeSockets[conversationId]
+      const messageType = "file"
+
+
+      chatSocket.message(caption, conversationId, messageType, replyingTo, pendingDraft.file)
+
+    }
+
+    document.getElementById('replyBar').style.display = 'none';
+  }
+
+
+}
