@@ -769,3 +769,8 @@ async function sendMessageWithDraft() {
 
 
 }
+
+
+document.getElementById("logoutBtnDrawer").addEventListener("click", () => {
+  auth.logout()
+})

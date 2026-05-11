@@ -158,6 +158,7 @@ class LoginApiView(APIView):
 		if not user:
 			return Response({"error":"Invalid Credentials"}, status=401)
 
+		login(request, user)
 		refresh = RefreshToken.for_user(user)
 
 		return Response({

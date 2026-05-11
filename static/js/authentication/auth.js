@@ -88,7 +88,7 @@ class Auth {
 
 				return {
 					"ok": false,
-					"data": response.json()
+					"data": await response.json()
 				}
 			}
 			const data = await response.json()
@@ -182,8 +182,8 @@ class Auth {
 		if (this.refreshToken) {
 			try {
 				const url = `${this.baseAPIUrl}/account/logout/`
-				const response = this.authenticatedRequest(url, null)
-
+				const response = this.authenticatedRequest(url, null, "POST")
+				console.log(response)
 			} catch (error) {
 				console.log("logout error", error)
 			}
