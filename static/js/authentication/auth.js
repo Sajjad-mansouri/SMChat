@@ -13,12 +13,12 @@ class Auth {
 
 	async login(username, password) {
 		let data = await this.getToken(username, password)
-		console.log("login data", data)
+
 		return data
 
 	}
 	async fetchPost(method, url, body, headers = {}, contentType = "application/json") {
-		console.log("method:", method, "url:", url)
+
 		const response = await fetch(url, {
 			method: method,
 			headers: {
@@ -144,7 +144,7 @@ class Auth {
 		}
 	}
 	async authenticatedRequest(url, body, fetchType = "POST", header_kwargs = {}, contentType = "application/json") {
-		console.log("contentType", contentType)
+
 		let fetchObject = this.fetchPost
 		if (fetchType == "GET") {
 
@@ -159,7 +159,7 @@ class Auth {
 			"Authorization": `Bearer ${this.accessToken}`,
 			...header_kwargs
 		}
-		console.log("authenticate request:", fetchType, url, body)
+
 		let response = await fetchObject(fetchType, url, body, headers)
 		if (response.status === 401) {
 			const refreshed = await this.refreshAccessToken();
@@ -183,7 +183,7 @@ class Auth {
 			try {
 				const url = `${this.baseAPIUrl}/account/logout/`
 				const response = this.authenticatedRequest(url, null, "POST")
-				console.log(response)
+
 			} catch (error) {
 				console.log("logout error", error)
 			}

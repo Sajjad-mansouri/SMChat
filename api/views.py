@@ -172,3 +172,11 @@ class ProfileUpdateView(UpdateAPIView):
 	parser_classes = [FormParser, MultiPartParser]
 	def get_object(self):
 		return self.request.user.profile
+
+
+
+class ConversationUpdateView(UpdateAPIView):
+	serializer_class = serializers.ConversationSerializer
+	permission_classes = [IsAuthenticated]
+	def get_queryset(self):
+		return Conversation.objects.filter(created_by=self.request.user)

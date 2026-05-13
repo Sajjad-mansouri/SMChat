@@ -40,27 +40,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
 	async def receive(self, text_data=None, bytes_data=None):
 		if text_data:
+			condition = True
 			message=json.loads(text_data)
 			if message.get("messageType") == "cancellation":
 				self.cancel_uploading()
+			elif message.get("messageType") == "status_notif":
+				await self.send_group_message(message)
 			else:
-				conversation_id = message['conversationId']
-				conversation = await aget_object_or_404(Conversation, id=conversation_id)
-				condition = await sync_to_async(self.get_message_condition)(conversation)
-
-				if condition:
-					message, msg_obj = await self.create_message(message)
-
-					message = await self.add_extra_value(message, msg_obj)
-
-					self.group_name = f"chat_{message['conversationId']}"
-
-			await self.channel_layer.group_send(
-				self.group_name,{
-				'type':'send.message',
-				'message':message
-				}
-			)
+				await self.send_message_to_coversation(message)
 
 		elif bytes_data:
 
@@ -77,8 +64,29 @@ class ChatConsumer(AsyncWebsocketConsumer):
 					}
 				)
 
+	async def send_message_to_coversation(self, message):
+				conversation_id = message['conversationId']
+				conversation = await aget_object_or_404(Conversation, id=conversation_id)
+				condition = await sync_to_async(self.get_message_condition)(conversation)
 
+				if condition:
+					message, msg_obj = await self.create_message(message)
 
+					message = await self.add_extra_value(message, msg_obj)
+
+					await self.send_group_message(message)
+	async def send_group_message(self, message):
+			message["sender_id"] = self.user.id
+			message["sender_username"] = self.user.username
+			print("sender_id", self.user.id, "sender_username",self.user.username,"group_name", self.group_name)
+			print("message in send_group_message method:",message)
+			self.group_name = f"chat_{message['conversationId']}"
+			await self.channel_layer.group_send(
+				self.group_name,{
+				'type':'send.message',
+				'message':message
+				}
+			)
 	async def create_message(self, message):
 		self.reply_to = None
 		msg_obj = None
@@ -172,8 +180,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
 			message["file"] = msg_obj.file.url if msg_obj.file else None
 
-		message["sender_id"] = self.user.id
-		message["sender_username"] = self.user.username
+
 		message["created_at"] = timestamp = timezone.now().isoformat()
 
 		return message

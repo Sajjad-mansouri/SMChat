@@ -53,6 +53,7 @@ async function getConversation(dataNav, callback = null) {
 }
 
 function populateNavConversations(container, item) {
+
   const userId = item.group_type == "direct" ? `data-user-id="${item.id}"` : ""
   const blockedBadgeSpan = item.blocklist_id != null ? '<span class="blocked-chip">Blocked</span>' : "";
   const chat = `
@@ -75,16 +76,15 @@ let replyingTo = null;
 let conversationId = null
 const activeSockets = {}
 let previousConversationId = null
+const currentUser = document.getElementById("drawerUsername").dataset.currentUser
+
 async function openChat(chatId = null) {
-  console.log("chatid in openchat", chatId)
+
   let chatItem
   if (chatId) {
-    console.log("chatid exists")
-    console.log(`.chat-item[data-conversation-id="${chatId}"]`)
-    console.log(document.querySelector(".chat-item"))
-    console.log(document)
+
     chatItem = document.querySelector(`.chat-item[data-conversation-id="${chatId}"]`);
-    console.log(chatItem)
+
 
   } else {
 
@@ -118,8 +118,8 @@ async function openChat(chatId = null) {
     chatItem.classList.add("active-chat")
 
     createMessageContainer(data)
-    if (userId == "undefined") {
 
+    if (userId == "undefined" | userId == undefined) {
       populateConversationMessages(data)
       createSocket(data)
       changeRoomStatus()
@@ -158,9 +158,9 @@ function newUserStatus() {
 }
 
 function changeRoomStatus() {
+
   if (previousConversationId != null && previousConversationId != conversationId) {
     // change user status to offline when go to the other room
-
     const previousChatSocket = activeSockets[previousConversationId]
     const messageType = "status_notif"
     const statusType = 'Offline'
@@ -200,11 +200,12 @@ function createMessageContainer(data) {
   }
 
   const disabled = data.blocklist_id != null ? `disabled=''` : ""
+
   mainContent = `
     <main class="main-content">
     <div class="chat-header" onclick="openUserProfile()" >
       <div class="chat-title" id="chatTitleClick">
-        <div class="header-avatar" id="headerAvatar"></div>
+        <div class="header-avatar" id="headerAvatar"><img  src="${data.conversation_image}"></div>
         <div>
           <h2 id="chatName" data-conversation-id="${conversationId}" ${userData} data-group-type="${data.group_type}"data-conversation-id="${conversationId}">${data.conversation_name}</h2>
           ${statusDiv}
@@ -292,7 +293,7 @@ async function joinConversation(conversationId, conversationType) {
 
 function populateConversationMessages(data) {
   const messagesContainer = document.getElementById("messagesContainer")
-  console.log('conversation data', data)
+
   data.group_chats.forEach(message => {
     const date = new Date(message.created);
     const hour = date.getHours();
@@ -363,7 +364,7 @@ async function sendMessage() {
   if (conversationId == "undefined") {
     // if we dont have previous chat with this user first create conversation and add users to it then create socker
     const userId = document.getElementById("chatName").dataset.userId
-    const response = await createConversation("", "direct", userId)
+    const response = await createConversation("", "direct", "", "private", userId)
     if (response.ok) {
       const data = await response.json()
       conversationId = data.conversation_id
@@ -392,9 +393,14 @@ document.getElementById("createGroupChannelBtn")?.addEventListener("click", () =
 });
 document.getElementById("submitCreateBtn")?.addEventListener("click", async () => {
   const createNameInputValue = document.getElementById("createNameInput").value.trim()
+
+  const createBioInputValue = document.getElementById("createBioInput").value.trim()
+
+  const createStatusSelectValue = document.getElementById("createStatusSelect").value
   const createTypeSelectValue = document.getElementById("createTypeSelect").value
+
   if (createNameInputValue && createTypeSelectValue) {
-    const response = await createConversation(createNameInputValue, createTypeSelectValue)
+    const response = await createConversation(createNameInputValue, createTypeSelectValue, createBioInputValue, createStatusSelectValue)
     const data = await response.json()
     const container = document.getElementById("chatsList");
     const activeNav = document.querySelector(`.nav-pill.active[data-nav="${data.group_type}"]`);
@@ -408,9 +414,11 @@ document.getElementById("submitCreateBtn")?.addEventListener("click", async () =
 document.getElementById("cancelCreateBtn")?.addEventListener("click", () => document.getElementById("createModalOverlay")?.classList.remove("active"));
 
 
-async function createConversation(createNameInputValue, createTypeSelectValue, userId = null) {
+async function createConversation(createNameInputValue, createTypeSelectValue, createBioInputValue, createStatusSelectValue, userId = null) {
   const body = JSON.stringify({
     "name": createNameInputValue,
+    "bio": createBioInputValue,
+    "status": createStatusSelectValue,
     "group_type": createTypeSelectValue,
     "member_user": userId
   })
@@ -509,16 +517,28 @@ async function openUserProfile() {
     url = `api/conversation/${conversationType}/user/${userIdData}/profile/`;
   } else {
     url = `api/conversation/${conversationType}/profile/${conversationId}`;
+
   }
   const response = await auth.authenticatedRequest(url, null, "GET")
   const data = await response.json()
   const blocklistID = data.blocklist_id
+  let changeImageSpan = ""
+
+  if (currentUser == data.created_by && conversationType != "direct") {
+
+    changeImageSpan = `<span onclick= "changeConversationAvatar('${conversationType}', ${conversationId})">change</span>`
+  }
   const memberDiv = conversationType == "direct" ? "" : `<div class="profile-modal-members" id="modalMembers">${data.members} subscribers</div>`
   const modalContent = `
   <div class="profile-modal">
     <div class="profile-modal-header">
       <button class="close-modal" id="closeModalBtn" onclick="closeProfileModal()">✕</button>
-      <div class="profile-modal-avatar" id="modalAvatar"><img src="${data.conversation_image}"></div>
+      <div class="profile-modal-avatar" id="modalAvatar">
+        <img id="conversation-img" src="${data.conversation_image}">
+        <input type="file" id="avatarUpload" style="display:none" accept="image/*">
+        ${changeImageSpan}
+
+      </div>
       <div class="profile-modal-name" id="modalName">${data.conversation_name}</div>
       ${memberDiv}
     </div>
@@ -742,12 +762,12 @@ async function sendMessageWithDraft() {
     if (conversationId == "undefined") {
       // if we dont have previous chat with this user first create conversation and add users to it then create socker
       const userId = document.getElementById("chatName").dataset.userId
-      const response = await createConversation("", "direct", userId)
+      const response = await createConversation("", "direct", "", "private", userId)
       if (response.ok) {
         const data = await response.json()
         conversationId = data.conversation_id
         openNav("direct", () => {
-          console.log("conversionId", conversationId)
+
           createSocket(data, caption)
 
           document.querySelector(`.chat-item[data-conversation-id="${conversationId}"]`).classList.add("active-chat")
@@ -755,7 +775,7 @@ async function sendMessageWithDraft() {
 
       }
     } else {
-      console.log("send file")
+
       const chatSocket = activeSockets[conversationId]
       const messageType = "file"
 
@@ -774,3 +794,33 @@ async function sendMessageWithDraft() {
 document.getElementById("logoutBtnDrawer").addEventListener("click", () => {
   auth.logout()
 })
+
+
+async function changeConversationAvatar(conversationType, conversationId) {
+  document.getElementById("avatarUpload").click();
+  document.getElementById("avatarUpload").addEventListener("change", function() {
+    const file = this.files[0]
+    const reader = new FileReader();
+
+    const accountAvatarImg = document.getElementById("conversation-img")
+    reader.onload = async function(e) {
+      const origin = window.location.origin
+      formData = new FormData()
+      formData.append("image", file)
+      formData.append("member_user", currentUser)
+
+      const response = await auth.authenticatedRequest(`${origin}/api/conversation/${conversationId}/update/`, formData, "PATCH", {}, "multipart/form-data")
+      const data = await response.json()
+
+      accountAvatarImg.src = e.target.result;
+
+      openNav(conversationType, () => {
+        openChat(conversationId)
+      })
+    }
+    reader.readAsDataURL(file)
+  }, {
+    once: true
+  })
+
+}

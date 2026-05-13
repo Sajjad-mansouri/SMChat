@@ -41,7 +41,7 @@
 <div class="drawer" id="drawerMenu">
   <div class="drawer-profile">
     <div class="drawer-avatar" id="drawerAvatarImg"><img src="{{request.user.profile.get_image}}" alt="{{request.user.username}}"></div>
-    <div class="drawer-username" id="drawerUsername"></div>
+    <div class="drawer-username" id="drawerUsername" data-current-user={{request.user.id}}></div>
     <input type="file" id="avatarUploadInput" style="display:none" accept="image/*">
   </div>
   <div class="drawer-divider"></div>
@@ -76,7 +76,17 @@
         <label>Name</label>
         <input type="text" id="createNameInput" placeholder="e.g., Design Team, Announcements" autocomplete="off">
       </div>
-
+      <div class="create-input-group">
+        <label>Bio</label>
+        <input type="text" id="createBioInput" placeholder="bio..." autocomplete="off">
+      </div>
+      <div class="create-input-group">
+        <label>Status</label>
+        <select id="createStatusSelect">
+          <option value="public">Public</option>
+          <option value="private">Private</option>
+        </select>
+      </div>
       <div class="create-actions">
         <button class="create-cancel" id="cancelCreateBtn">Cancel</button>
         <button class="create-submit" id="submitCreateBtn">Create →</button>

@@ -28,6 +28,7 @@ class UserSerializer(serializers.ModelSerializer):
 			return obj.username
 
 	def get_conversation_image(self, obj):
+			
 			return obj.profile.get_image()
 
 	def get_group_type(self, obj):
@@ -90,8 +91,8 @@ class ConversationSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Conversation
-		fields = ["conversation_id", "current_user", "name","conversation_name", "bio", "conversation_image","last_message","created_by", "group_type", "group_chats", "blocklist_id"]
-		read_only_fields = ["conversation_id", "bio","conversation_image", "last_message","created_by", "blocklist_id"]
+		fields = ["conversation_id", "current_user", "image", "created_by" ,"name","conversation_name", "bio", "status", "conversation_image","last_message","created_by", "group_type", "blocklist_id"]
+		read_only_fields = ["conversation_id", "bio","conversation_image", "last_message", "blocklist_id"]
 
 	def get_conversation_name(self, obj):
 
@@ -104,11 +105,13 @@ class ConversationSerializer(serializers.ModelSerializer):
 			return obj.name
 
 	def get_conversation_image(self, obj):
+		
 		if obj.group_type == "direct":
 			obj = self.add_member(obj)
 
-			return [other_user.profile.get_image() for other_user in obj.other_users][0]
+			return [other_user.profile.get_image() for other_user in obj.other_users]
 		else:
+			
 			return obj.get_image()
 
 	def add_member(self, obj):
@@ -133,7 +136,7 @@ class ConversationSerializer(serializers.ModelSerializer):
 		if obj.group_type == "direct":
 			obj = self.add_member(obj)
 
-			return [other_user.profile.bio for other_user in obj.other_users][0]
+			return [other_user.profile.bio for other_user in obj.other_users]
 		else:
 			return obj.bio
 			
@@ -156,11 +159,17 @@ class ConversationSerializer(serializers.ModelSerializer):
 	def to_internal_value(self, data):
 		data = data.copy()
 		request = self.context["request"]
-		data["created_by"] = request.user
-		return data
+		data["created_by"] = request.user.id
+		
+		return super().to_internal_value(data)
 
+		return validated
+	def is_valid(self, *, raise_exception=False):
+		boolean = super().is_valid(raise_exception=False)
+		
+		return boolean
 	def create(self, validated_data):
-		print("craete method serializer")
+		
 		member_users = [validated_data["created_by"]]
 		try:
 			user_id = validated_data.pop('member_user')
@@ -179,12 +188,13 @@ class ConversationSerializer(serializers.ModelSerializer):
 		return conversation
 
 	def validate(self, data):
-		print("validate serializer", data)
-		request = self.context["request"]
-		q1 = Q(user=data["created_by"]) & Q(blocked_user_id=data["member_user"])
-		q2 = Q(user=data["member_user"]) & Q(blocked_user_id=data["created_by"])
-		if BlockList.objects.filter(q1 | q2).exists():
-			raise serializers.ValidationError("can not create conversation for users that block each other")
+		if self.instance is None:
+			request = self.context["request"]
+			member_user = self.initial_data.get("member_user")
+			q1 = Q(user_id=data["created_by"]) & Q(blocked_user_id=member_user)
+			q2 = Q(user_id=member_user) & Q(blocked_user_id=data["created_by"])
+			if BlockList.objects.filter(q1 | q2).exists():
+				raise serializers.ValidationError("can not create conversation for users that block each other")
 		return data
 
 class ConversationProfileSerializer(serializers.ModelSerializer):
@@ -245,11 +255,13 @@ class ConversationProfileSerializer(serializers.ModelSerializer):
 
 
 	def get_conversation_image(self, obj):
+		
 		if obj.group_type == "direct":
 			other_user = self.get_direct_other_user(obj)
 
 			return other_user.profile.get_image()
 		else:
+			
 			return obj.get_image()
 
 	def get_blocklist_id(self, obj):
@@ -267,7 +279,7 @@ class ConversationWithMessageSerializer(ConversationProfileSerializer):
 	class Meta(ConversationProfileSerializer.Meta):
 		model = Conversation
 		fields = [
-		"created_by", "group_type", "bio","blocklist_id",
+		"created_by", "group_type", "bio","blocklist_id","conversation_image",
 		"group_chats", "name", "current_user", 
 		"conversation_id", "conversation_name"]
 
@@ -298,7 +310,7 @@ class BlockListSerializer(serializers.ModelSerializer):
 
 	def create(self, validated_data):
 
-		print(validated_data)
+		
 		user = validated_data["user"]
 		if "conversation" in validated_data:
 			#add conversation and user in blocklist

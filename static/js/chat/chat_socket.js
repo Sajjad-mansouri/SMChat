@@ -142,6 +142,7 @@ class ChatClient {
 	}
 
 	handleMessage(data) {
+		console.log("***handleMessage method***", "user", this.currentUserId, "data", data)
 		if (data.messageType == "status_notif") {
 
 			this.changeChatStatus(data)
@@ -239,9 +240,12 @@ class ChatClient {
 	}
 
 	changeChatStatus(data) {
+
+		console.log("changeChatStatus", data.sender_id, this.currentUserId)
 		if (data.sender_id != this.currentUserId) {
 
-			const chatStatus = document.querySelector(`.chat-status[data-user="${data.conversationId}"]`);
+			const chatStatus = document.querySelector(`.chat-status[data-conversation-id="${data.conversationId}"]`);
+
 
 			if (data.statusType == "Online") {
 				// should change if multiple member exist 
@@ -283,7 +287,7 @@ class ChatClient {
 	createProgressBar(data, type = "image", file = {
 		name: "best book"
 	}) {
-		console.log(data, "create progressbar")
+
 		const toast = document.createElement('div');
 		toast.className = 'upload-progress-toast';
 		const fileNameShort = file.name.length > 28 ? file.name.slice(0, 25) + '...' : file.name;
