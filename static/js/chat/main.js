@@ -111,6 +111,7 @@ async function openChat(chatId = null) {
   if (response.ok) {
 
     const data = await response.json()
+    console.log('data', data)
 
     document.querySelectorAll(".chat-item").forEach(element => {
       element.classList.remove("active-chat")
@@ -186,34 +187,8 @@ function createMessageContainer(data) {
     conversationId = data.conversation_id
     userData = ""
   }
-  let statusDiv;
-  if (data.group_type == "direct") {
-    let blocklistClass = "";
-    let statusText = "Offline";
-    if (data.blocklist_id != null) {
-      blocklistClass = "blocked-status";
-      statusText = "🔴 Blocked";
-    }
-    statusDiv = `<div class="chat-status ${blocklistClass}" id="chatStatus" data-group-type="${data.group_type}"data-conversation-id="${conversationId}" ${userData}>${statusText}</div>`
-  } else {
-    statusDiv = ""
-  }
-
   const disabled = data.blocklist_id != null ? `disabled=''` : ""
-
-  mainContent = `
-    <main class="main-content">
-    <div class="chat-header" onclick="openUserProfile()" >
-      <div class="chat-title" id="chatTitleClick">
-        <div class="header-avatar" id="headerAvatar"><img  src="${data.conversation_image}"></div>
-        <div>
-          <h2 id="chatName" data-conversation-id="${conversationId}" ${userData} data-group-type="${data.group_type}"data-conversation-id="${conversationId}">${data.conversation_name}</h2>
-          ${statusDiv}
-        </div>
-      </div>
-    </div>
-    <div class="messages-container" id="messagesContainer">
-    </div>
+  let inputElements = `
     <div id="replyBar" class="reply-bar" style="display: none;">
       <div class="reply-bar-info">
         <div class="reply-bar-sender" id="replyBarSender">Replying to...</div>
@@ -235,6 +210,45 @@ function createMessageContainer(data) {
     </div>
     <button class="send-button" id="sendBtn" onclick="sendMessage()" ${disabled}><svg width="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
     </svg></button></div>
+  `
+  let userInputElement = "";
+  if (data.group_type == "channel") {
+    console.log(data.created_by, currentUser, typeof data.created_by, typeof currentUser, data.created_by == currentUser)
+    if (data.created_by == currentUser) {
+      userInputElement = inputElements
+    }
+  } else {
+    userInputElement = inputElements
+  }
+  let statusDiv;
+  if (data.group_type == "direct") {
+    let blocklistClass = "";
+    let statusText = "Offline";
+    if (data.blocklist_id != null) {
+      blocklistClass = "blocked-status";
+      statusText = "🔴 Blocked";
+    }
+    statusDiv = `<div class="chat-status ${blocklistClass}" id="chatStatus" data-group-type="${data.group_type}"data-conversation-id="${conversationId}" ${userData}>${statusText}</div>`
+  } else {
+    statusDiv = ""
+  }
+
+
+
+  mainContent = `
+    <main class="main-content">
+    <div class="chat-header" onclick="openUserProfile()" >
+      <div class="chat-title" id="chatTitleClick">
+        <div class="header-avatar" id="headerAvatar"><img  src="${data.conversation_image}"></div>
+        <div>
+          <h2 id="chatName" data-conversation-id="${conversationId}" ${userData} data-group-type="${data.group_type}"data-conversation-id="${conversationId}">${data.conversation_name}</h2>
+          ${statusDiv}
+        </div>
+      </div>
+    </div>
+    <div class="messages-container" id="messagesContainer">
+    </div>
+    ${userInputElement}
   </main>
   `
   app.insertAdjacentHTML("beforeend", mainContent)
