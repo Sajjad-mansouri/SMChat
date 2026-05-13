@@ -10,3 +10,8 @@ class IsMember(permissions.BasePermission):
 		else:
 			return True
 
+
+class IsAcceptedMember(permissions.BasePermission):
+    def has_permission(self, request, view):
+    	print(view)
+    	return True

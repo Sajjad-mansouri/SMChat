@@ -14,19 +14,21 @@ from rest_framework.parsers import FormParser, MultiPartParser
 from . import serializers
 from chat.models import Conversation, ConversationMember, Chat, BlockList
 from account.models import Profile
-from .permissions import IsMember
+from .permissions import IsMember, IsAcceptedMember
 
 
 UserModel = get_user_model()
 class Conversations(ListAPIView):
 	serializer_class = serializers.ConversationSerializer
-	permission_classes = [IsAuthenticated]
+	permission_classes = [IsAuthenticated, IsAcceptedMember]
 	def get_queryset(self):
 		conversation_type = self.kwargs.get("conversation_type")
-		q1 = Q(created_by=self.request.user) & Q(group_type=conversation_type)
-		q2 = Q(members__user=self.request.user) & Q(group_type=conversation_type)
-		q = q1|q2
-		qs = Conversation.objects.filter(q).distinct().prefetch_related("members__user")
+		q_user = Q(group_type="direct")
+		q_group_channel = (~Q(group_type="direct") & Q(members__accepted=True) & Q(status="private")) | Q(status="public")
+		q_general = Q(members__user=self.request.user) 
+		g_total = ((q_user & q_general) | (q_group_channel & q_general) | Q(created_by=self.request.user))& Q(group_type=conversation_type)
+
+		qs = Conversation.objects.filter(g_total).distinct().prefetch_related("members__user")
 		for conversation in qs:
 			# conversation.last_message = conversation.chats.first()
 			if Chat.objects.filter(conversation=conversation).exists():
@@ -92,7 +94,7 @@ class SearchView(APIView):
 
 	def get_queryset(self):
 		search_param = self.request.query_params.get("search")
-		user_q = Q(username__icontains=search_param) & ~Q(conversation_members__conversation__members__user=self.request.user)
+		user_q = Q(username__icontains=search_param) 
 		exclude_q = Q(user_block_list__blocked_user=self.request.user)
 		users = UserModel.objects.filter(user_q).exclude(exclude_q).distinct()
 
@@ -100,7 +102,7 @@ class SearchView(APIView):
 		conversation_q = Q(status="public") & Q(name__icontains=search_param) & Q(group_type__in=["channel", "group"])
 		exclude_conversation_q = Q(blocklist__user=self.request.user) 
 		conversations = Conversation.objects.filter(conversation_q).exclude(exclude_conversation_q)
-
+		print("search param",search_param,users, conversations)
 		return users, conversations
 
 	def get_serializer(self, user_qs, conversation_qs):

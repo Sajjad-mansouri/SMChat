@@ -66,6 +66,7 @@ class ConversationMember(models.Model):
 	def __str__(self):
 		return f"{self.user} in {self.conversation}"
 
+
 	class Meta:
 		constraints = [
 			models.UniqueConstraint(
