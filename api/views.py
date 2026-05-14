@@ -90,6 +90,13 @@ class ConversationSettingView(RetrieveAPIView):
 	def get_queryset(self):
 		return Conversation.objects.filter(group_type__in=["group", "channel"])
 
+class ConversationDeleteView(DestroyAPIView):
+	serializer_class = serializers.ConversationSettingSerializer
+	permission_classes = [IsAuthenticated, IsConversationOwner]
+	def get_queryset(self):
+		return Conversation.objects.filter(group_type__in=["group", "channel"])
+
+
 class SearchView(APIView):
 	permission_classes = [IsAuthenticated]
 

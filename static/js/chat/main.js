@@ -74,6 +74,7 @@ function populateNavConversations(container, item) {
 getConversation("direct")
 let replyingTo = null;
 let conversationId = null
+let conversationType = null;
 const activeSockets = {}
 let previousConversationId = null
 const currentUser = document.getElementById("drawerUsername").dataset.currentUser
@@ -95,7 +96,7 @@ async function openChat(chatId = null) {
   previousConversationId = conversationId;
   conversationId = chatItem.dataset.conversationId;
   const userId = chatItem.dataset.userId
-  const conversationType = chatItem.dataset.type;
+  conversationType = chatItem.dataset.type;
 
 
   const userIdData = conversationType == "direct" && userId != "undefined" ? userId : null
@@ -850,6 +851,7 @@ let isModalInitialized = false;
 
 async function conversationSetting(conversationId) {
   const settingsModalOverlay = document.getElementById("settingsModalOverlay")
+
   settingsModalOverlay.classList.add("active")
   addSettingModalCloseListener(settingsModalOverlay)
   const data = await getConversationInfo(conversationId)
@@ -1045,4 +1047,56 @@ async function removeMembership(conversationId, memberId) {
 
 
   }
+}
+
+
+let pendingConfirmCallback = null;
+document.getElementById("deleteSpaceBtn").addEventListener("click", () => {
+  showConfirm(`Are you sure you want to delete "-"? This action cannot be undone.`, deleteSpaceConfirmed);
+});
+document.getElementById("confirmCancelBtn").addEventListener("click", closeConfirm);
+document.getElementById("confirmActionBtn").addEventListener("click", () => {
+  if (pendingConfirmCallback) pendingConfirmCallback();
+});
+document.getElementById("confirmModalOverlay").addEventListener("click", (e) => {
+  if (e.target === document.getElementById("confirmModalOverlay")) closeConfirm();
+});
+
+
+
+function showConfirm(message, onConfirm) {
+  const overlay = document.getElementById('confirmModalOverlay');
+  const msgEl = document.getElementById('confirmModalMessage');
+  msgEl.textContent = message;
+  pendingConfirmCallback = onConfirm;
+  overlay.classList.add('active');
+}
+
+async function deleteSpaceConfirmed() {
+
+  const origin = window.location.origin
+  const url = origin + `/api/conversation/${conversationId}/delete/`
+  const body = ""
+  const response = await auth.authenticatedRequest(url, body, "DELETE", {})
+  if (response.ok) {
+    closeProfileModal();
+    closeSettingsModal()
+    openNav(conversationType)
+    closeConfirm()
+    let mainContent = document.querySelector(".main-content")
+    if (mainContent) {
+
+      mainContent.remove()
+    }
+    showToast(`deleted!`, 'success');
+  } else {
+    showToast(`Failed to delet please try again later!`, 'error');
+
+
+  }
+}
+
+function closeConfirm() {
+  document.getElementById('confirmModalOverlay').classList.remove('active');
+  pendingConfirmCallback = null;
 }

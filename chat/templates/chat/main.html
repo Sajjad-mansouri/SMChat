@@ -100,6 +100,17 @@
 
 </div>
 <div id="toastNotification" class="toast-notification">✨ Success</div>
+<div class="confirm-modal-overlay" id="confirmModalOverlay">
+  <div class="confirm-modal">
+    <div class="confirm-modal-header"><span>⚠️ Confirm Action</span></div>
+    <div class="confirm-modal-body" id="confirmModalMessage">Are you sure you want to delete this space? This action cannot be undone.</div>
+    <div class="confirm-modal-actions">
+      <button class="confirm-cancel" id="confirmCancelBtn">Cancel</button>
+      <button class="confirm-danger" id="confirmActionBtn">Delete</button>
+    </div>
+  </div>
+</div>
+
 <div class="confirmation-modal-overlay" id="blockConfirmModal">
   <div class="confirmation-modal">
     <div class="confirmation-icon">
@@ -135,7 +146,7 @@
       <div id="requestsTab" class="tab-content">
         <div id="joinRequestsList" class="requests-list"><div class="empty-state">No pending requests</div></div>
       </div>
-      
+      <button class="delete-space-btn" id="deleteSpaceBtn">🗑️ Delete This Space</button>
       <div class="settings-actions"><button class="settings-cancel" id="cancelSettingsBtn">Cancel</button><button class="settings-save" id="saveSettingsBtn">💾 Save Changes</button></div>
     </div>
   </div>

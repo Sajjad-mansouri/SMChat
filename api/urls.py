@@ -28,6 +28,8 @@ urlpatterns = [
 	path("conversation/create/", views.ConversationCreateView.as_view(), name="create_conversation"),
 	path("conversation/<int:pk>/update/", views.ConversationUpdateView.as_view(), name="update_conversation"),
 	path("conversation/<int:pk>/setting/", views.ConversationSettingView.as_view(), name="conversation_setting"),
+	path("conversation/<int:pk>/delete/", views.ConversationDeleteView.as_view(), name="delete_conversation"),
+
 
 
 	path("membership/add/", views.MembershipCreateView.as_view(), name="add_member"),
