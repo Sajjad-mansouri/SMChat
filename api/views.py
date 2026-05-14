@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework import mixins
-from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, GenericAPIView, UpdateAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, GenericAPIView, UpdateAPIView, DestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db.models import Q, Value
@@ -130,7 +130,16 @@ class MembershipCreateView(CreateAPIView):
 	serializer_class = serializers.ConversationMemberSerializer
 	permission_classes = [IsAuthenticated]
 
-
+class MembershipUpdateView(UpdateAPIView):
+	serializer_class = serializers.ConversationMemberSerializer
+	permission_classes = [IsAuthenticated, IsConversationOwner]
+	def get_queryset(self):
+		return ConversationMember.objects.all()
+class MembershipDeleteView(DestroyAPIView):
+	serializer_class = serializers.ConversationMemberSerializer
+	permission_classes = [IsAuthenticated, IsConversationOwner]
+	def get_queryset(self):
+		return ConversationMember.objects.all()
 
 class BlockListCreateView(CreateAPIView):
 	serializer_class = serializers.BlockListSerializer

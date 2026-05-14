@@ -288,15 +288,14 @@ class ConversationMemberSerializer(serializers.ModelSerializer):
 	user = UserSerializer(read_only=True)
 	class Meta:
 		model = ConversationMember
-		fields = ["conversation", "accepted", "user"]
+		fields = ["id","conversation", "accepted", "user"]
 
 
 
 	def to_internal_value(self, data):
 		data = data.copy()
 		request = self.context["request"]
-		data["conversation"] = get_object_or_404(Conversation, id=data.pop("conversation"))
-		data["user"] = request.user
+		data["user"] = request.user.id
 		return super().to_internal_value(data)
 
 
@@ -306,7 +305,7 @@ class ConversationSettingSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Conversation
-		fields = ["name", "status", "members", "created_by"]
+		fields = ["id","name", "status", "members", "created_by"]
 
 
 class BlockListSerializer(serializers.ModelSerializer):

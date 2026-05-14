@@ -31,6 +31,10 @@ urlpatterns = [
 
 
 	path("membership/add/", views.MembershipCreateView.as_view(), name="add_member"),
+	path("membership/<int:pk>/update/", views.MembershipUpdateView.as_view(), name="update_membership"),
+	path("membership/<int:pk>/delete/", views.MembershipDeleteView.as_view(), name="delete_membership"),
+
+
 
 
 

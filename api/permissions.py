@@ -1,4 +1,5 @@
 from rest_framework import permissions
+from chat.models import Conversation,ConversationMember
 
 class IsMember(permissions.BasePermission):
 
@@ -12,5 +13,9 @@ class IsMember(permissions.BasePermission):
 
 
 class IsConversationOwner(permissions.BasePermission):
-    def has_object_permission(self, request, view, obj):
-    	return  obj.created_by == request.user
+	def has_object_permission(self, request, view, obj):
+		if isinstance(obj, Conversation):
+			return  obj.created_by == request.user
+		elif isinstance(obj, ConversationMember):
+			return obj.conversation.created_by == request.user
+

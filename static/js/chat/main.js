@@ -934,7 +934,7 @@ function loadConversationMembers(data) {
               <div class="member-role">${isCreator ? 'Creator' : (isSelf ? 'You' : 'Member')}</div>
             </div>
           </div>
-          ${(!isCreator && !isSelf ) ? `<button class="remove-member-btn" data-memberid="${member.id}">Remove</button>` : ''}
+          ${(!isCreator && !isSelf ) ? `<button class="remove-member-btn" data-memberid="${member.id}" onclick="removeMembership('${data.id}', '${member.id}')">Remove</button>` : ''}
         </div>
 `)
     })
@@ -955,9 +955,10 @@ function loadConversationMembers(data) {
               <div class="member-role">wants to join</div>
             </div>
           </div>
-          <button class="accept-request-btn" data-reqid="${member.id}">✓ Accept</button>
+          <button class="accept-request-btn" data-memberid="${member.id}" onclick="acceptMembership('${data.id}', '${member.id}')">✓ Accept</button>
         </div>
 `)
+
     })
   }
 
@@ -982,3 +983,66 @@ document.querySelectorAll(".management-tabs .tab-btn").forEach(element => {
     else document.getElementById('requestsTab').classList.add('active');
   })
 })
+
+
+const saveSettingsBtn = document.getElementById("saveSettingsBtn");
+saveSettingsBtn.addEventListener("click", async () => {
+
+  const newConversationName = document.getElementById("settingsSpaceName").value;
+  const newConversationStatus = document.getElementById("settingsPrivacy").value;
+  formData = new FormData()
+  formData.append("name", newConversationName)
+  formData.append("status", newConversationStatus)
+
+  const conversationResponse = await auth.authenticatedRequest(`${origin}/api/conversation/${conversationId}/update/`, formData, "PATCH", {}, "multipart/form-data")
+  if (conversationResponse.ok) {
+    showToast("settings saved successfully!", 'success');
+
+  } else {
+    showToast("Faild to save settings!", 'error');
+
+  }
+
+
+})
+
+
+function showToast(message, type = 'success') {
+  const toast = document.getElementById('toastNotification');
+  toast.textContent = message;
+  toast.className = `toast-notification toast-${type}`;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+
+async function acceptMembership(conversationId, memberId) {
+  const body = JSON.stringify({
+    "accepted": true
+  })
+  const response = await auth.authenticatedRequest(`${origin}/api/membership/${memberId}/update/`, body, "PATCH", {}, "application/json")
+  if (response.ok) {
+    showToast(`accepted`, 'success');
+
+    conversationSetting(conversationId)
+  } else {
+    showToast(`Failed to accept please try again later!`, 'error');
+
+
+  }
+}
+
+
+async function removeMembership(conversationId, memberId) {
+  const body = ""
+  const response = await auth.authenticatedRequest(`${origin}/api/membership/${memberId}/delete/`, body, "DELETE", {})
+  if (response.ok) {
+    showToast(`deleted!`, 'success');
+
+    conversationSetting(conversationId)
+  } else {
+    showToast(`Failed to delet please try again later!`, 'error');
+
+
+  }
+}
