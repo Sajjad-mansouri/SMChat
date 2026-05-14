@@ -11,7 +11,6 @@ class IsMember(permissions.BasePermission):
 			return True
 
 
-class IsAcceptedMember(permissions.BasePermission):
-    def has_permission(self, request, view):
-    	print(view)
-    	return True
+class IsConversationOwner(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+    	return  obj.created_by == request.user

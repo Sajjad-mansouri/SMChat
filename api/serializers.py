@@ -79,6 +79,7 @@ class MessageSerializer(serializers.ModelSerializer):
 		else:
 			return None
 
+
 class ConversationSerializer(serializers.ModelSerializer):
 	conversation_id = serializers.SerializerMethodField()
 	conversation_name = serializers.SerializerMethodField()
@@ -284,17 +285,29 @@ class ConversationWithMessageSerializer(ConversationProfileSerializer):
 		"conversation_id", "conversation_name"]
 
 class ConversationMemberSerializer(serializers.ModelSerializer):
+	user = UserSerializer(read_only=True)
 	class Meta:
 		model = ConversationMember
-		fields = ["conversation", "user", "accepted"]
-		read_only_fields = ["accepted"]
+		fields = ["conversation", "accepted", "user"]
+
+
 
 	def to_internal_value(self, data):
 		data = data.copy()
 		request = self.context["request"]
 		data["conversation"] = get_object_or_404(Conversation, id=data.pop("conversation"))
 		data["user"] = request.user
-		return data
+		return super().to_internal_value(data)
+
+
+class ConversationSettingSerializer(serializers.ModelSerializer):
+
+	members = ConversationMemberSerializer(many=True)
+
+	class Meta:
+		model = Conversation
+		fields = ["name", "status", "members", "created_by"]
+
 
 class BlockListSerializer(serializers.ModelSerializer):
 	class Meta:

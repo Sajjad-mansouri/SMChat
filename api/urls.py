@@ -27,6 +27,8 @@ urlpatterns = [
 
 	path("conversation/create/", views.ConversationCreateView.as_view(), name="create_conversation"),
 	path("conversation/<int:pk>/update/", views.ConversationUpdateView.as_view(), name="update_conversation"),
+	path("conversation/<int:pk>/setting/", views.ConversationSettingView.as_view(), name="conversation_setting"),
+
 
 	path("membership/add/", views.MembershipCreateView.as_view(), name="add_member"),
 

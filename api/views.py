@@ -14,13 +14,13 @@ from rest_framework.parsers import FormParser, MultiPartParser
 from . import serializers
 from chat.models import Conversation, ConversationMember, Chat, BlockList
 from account.models import Profile
-from .permissions import IsMember, IsAcceptedMember
+from .permissions import IsMember, IsConversationOwner
 
 
 UserModel = get_user_model()
 class Conversations(ListAPIView):
 	serializer_class = serializers.ConversationSerializer
-	permission_classes = [IsAuthenticated, IsAcceptedMember]
+	permission_classes = [IsAuthenticated]
 	def get_queryset(self):
 		conversation_type = self.kwargs.get("conversation_type")
 		q_user = Q(group_type="direct")
@@ -83,6 +83,12 @@ class ConversationProfile(ConversationDetail):
 class ConversationCreateView(CreateAPIView):
 	serializer_class = serializers.ConversationSerializer
 	permission_classes = [IsAuthenticated]
+
+class ConversationSettingView(RetrieveAPIView):
+	serializer_class = serializers.ConversationSettingSerializer
+	permission_classes = [IsAuthenticated, IsConversationOwner]
+	def get_queryset(self):
+		return Conversation.objects.filter(group_type__in=["group", "channel"])
 
 class SearchView(APIView):
 	permission_classes = [IsAuthenticated]

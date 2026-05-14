@@ -542,7 +542,7 @@ async function openUserProfile() {
   if (currentUser == data.created_by && conversationType != "direct") {
 
     changeImageSpan = `<span onclick= "changeConversationAvatar('${conversationType}', ${conversationId})">change</span>`
-    conversationSettingEle = `<div ><button class="header-settings-btn" id="chatSettingsBtn" onclick="conversationSetting()">⚙️</button></div>`
+    conversationSettingEle = `<div ><button class="header-settings-btn" id="chatSettingsBtn" onclick="conversationSetting('${conversationId}')">⚙️</button></div>`
   }
 
   const memberDiv = conversationType == "direct" ? "" : `<div class="profile-modal-members" id="modalMembers">${data.members} subscribers</div>`
@@ -848,13 +848,20 @@ async function changeConversationAvatar(conversationType, conversationId) {
 // settings
 let isModalInitialized = false;
 
-function conversationSetting() {
+async function conversationSetting(conversationId) {
   const settingsModalOverlay = document.getElementById("settingsModalOverlay")
   settingsModalOverlay.classList.add("active")
+  addSettingModalCloseListener(settingsModalOverlay)
+  const data = await getConversationInfo(conversationId)
+  setSettingInputValues(data)
+  loadConversationMembers(data)
+
+
+}
+
+function addSettingModalCloseListener(settingsModalOverlay) {
   const closeBtn = document.getElementById("closeSettingsBtn");
   const cancelSettingsBtn = document.getElementById("cancelSettingsBtn")
-
-
   if (!isModalInitialized) {
     // Close button listener
     closeBtn.addEventListener("click", closeSettingsModal);
@@ -871,7 +878,107 @@ function conversationSetting() {
   }
 }
 
+async function getConversationInfo(conversationId) {
+  const origin = window.location.origin
+  const url = origin + `/api/conversation/${conversationId}/setting/`
+  const response = await auth.authenticatedRequest(url, null, "GET")
+  const data = await response.json()
+  return data
+
+
+}
+
+function setSettingInputValues(data) {
+  const settingsSpaceName = document.getElementById("settingsSpaceName")
+  settingsSpaceName.value = data.name
+
+  const settingsPrivacy = document.getElementById("settingsPrivacy")
+  settingsPrivacy.value = data.status
+}
+
+function loadConversationMembers(data) {
+  console.log('load member', data)
+  const membersList = document.getElementById("membersList");
+  const joinRequestsList = document.getElementById("joinRequestsList")
+
+  const accepted = data.members.filter(member => {
+
+    return member.accepted == true
+  })
+
+  const requested = data.members.filter(member => {
+
+    return member.accepted == false
+  })
+  document.getElementById("memberCountBadge").innerText = accepted.length
+  document.getElementById("requestsCountBadge").innerText = requested.length
+
+  if (accepted.length === 0) {
+    membersList.innerHTML = '<div class="empty-state">No members yet</div>'
+  } else {
+    membersList.innerHTML = ""
+
+    accepted.forEach(member => {
+      console.log(member)
+      console.log(currentUser, member.user.id, currentUser == member.user.id)
+      console.log(data.created_by, member.user.id, data.created_by == member.user.id)
+
+      isSelf = currentUser == member.user.id
+      isCreator = data.created_by == member.user.id
+      membersList.insertAdjacentHTML("beforeend", `
+        <div class="member-item" data-member="${member.id}">
+          <div class="member-info">
+            <div class="member-avatar"><img src="${member.user.conversation_image}"></div>
+            <div class="member-details">
+              <div class="member-name">${member.user.username} ${isCreator ? '👑 Admin' : ''} ${isSelf ? '(You)' : ''}</div>
+              <div class="member-role">${isCreator ? 'Creator' : (isSelf ? 'You' : 'Member')}</div>
+            </div>
+          </div>
+          ${(!isCreator && !isSelf ) ? `<button class="remove-member-btn" data-memberid="${member.id}">Remove</button>` : ''}
+        </div>
+`)
+    })
+
+  }
+
+  if (requested.length === 0) {
+    joinRequestsList.innerHTML = `<div class="empty-state">✨ No pending join requests</div>`
+  } else {
+    joinRequestsList.innerHTML = ""
+    requested.forEach(member => {
+      joinRequestsList.insertAdjacentHTML("beforeend", `
+        <div class="request-item">
+          <div class="request-info">
+            <div class="request-avatar"><img src="${member.user.conversation_image}"></div>
+            <div class="member-details">
+              <div class="member-name">${member.user.username}</div>
+              <div class="member-role">wants to join</div>
+            </div>
+          </div>
+          <button class="accept-request-btn" data-reqid="${member.id}">✓ Accept</button>
+        </div>
+`)
+    })
+  }
+
+}
+
 function closeSettingsModal() {
   document.getElementById("settingsModalOverlay").classList.remove("active");
 
 }
+
+
+document.querySelectorAll(".management-tabs .tab-btn").forEach(element => {
+
+  element.addEventListener("click", () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    element.classList.add("active")
+
+    currentTab = element.dataset.tab;
+    document.getElementById('membersTab').classList.remove('active');
+    document.getElementById('requestsTab').classList.remove('active');
+    if (currentTab === 'members') document.getElementById('membersTab').classList.add('active');
+    else document.getElementById('requestsTab').classList.add('active');
+  })
+})
