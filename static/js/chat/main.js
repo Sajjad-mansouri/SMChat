@@ -537,11 +537,14 @@ async function openUserProfile() {
   const data = await response.json()
   const blocklistID = data.blocklist_id
   let changeImageSpan = ""
+  let conversationSettingEle = ""
 
   if (currentUser == data.created_by && conversationType != "direct") {
 
     changeImageSpan = `<span onclick= "changeConversationAvatar('${conversationType}', ${conversationId})">change</span>`
+    conversationSettingEle = `<div ><button class="header-settings-btn" id="chatSettingsBtn" onclick="conversationSetting()">⚙️</button></div>`
   }
+
   const memberDiv = conversationType == "direct" ? "" : `<div class="profile-modal-members" id="modalMembers">${data.members} subscribers</div>`
   const modalContent = `
   <div class="profile-modal">
@@ -566,10 +569,11 @@ async function openUserProfile() {
           <svg width="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           Send Message
         </button>
-        <div style="position: relative;">
+        <div style="position: relative;display:flex">
           <button class="three-dots-btn" id="threeDotsBtn" onclick = "openThreeDot()">
             <svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
           </button>
+
           <div class="dropdown-menu" id="dropdownMenu" >
             <div class="dropdown-item" id="blockUserBtn" onclick="blockConversation('${data.conversation_name}',${data.conversation_id}, ${data.id}, ${data.blocklist_id}, true)">
               <svg width="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M4 4l16 16"/></svg>
@@ -578,6 +582,7 @@ async function openUserProfile() {
 
           </div>
         </div>
+            ${conversationSettingEle}
       </div>
     </div>
   </div>
@@ -836,5 +841,37 @@ async function changeConversationAvatar(conversationType, conversationId) {
   }, {
     once: true
   })
+
+}
+
+
+// settings
+let isModalInitialized = false;
+
+function conversationSetting() {
+  const settingsModalOverlay = document.getElementById("settingsModalOverlay")
+  settingsModalOverlay.classList.add("active")
+  const closeBtn = document.getElementById("closeSettingsBtn");
+  const cancelSettingsBtn = document.getElementById("cancelSettingsBtn")
+
+
+  if (!isModalInitialized) {
+    // Close button listener
+    closeBtn.addEventListener("click", closeSettingsModal);
+    cancelSettingsBtn.addEventListener("click", closeSettingsModal);
+
+    // Overlay click listener (close when clicking outside)
+    settingsModalOverlay.addEventListener("click", (e) => {
+      if (e.target === settingsModalOverlay) {
+        closeSettingsModal();
+      }
+    });
+
+    isModalInitialized = true;
+  }
+}
+
+function closeSettingsModal() {
+  document.getElementById("settingsModalOverlay").classList.remove("active");
 
 }

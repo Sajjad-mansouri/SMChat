@@ -112,7 +112,33 @@
     </div>
   </div>
 </div>
-
+<div class="settings-modal-overlay" id="settingsModalOverlay">
+  <div class="settings-modal">
+    <div class="settings-modal-header"><span>⚙️ Space Management</span><button class="close-modal-btn" id="closeSettingsBtn">✕</button></div>
+    <div class="settings-modal-body">
+      <div class="settings-group"><label>📛 Space Name</label><input type="text" id="settingsSpaceName" placeholder="Enter space name"></div>
+      <div class="settings-group"><label>🔒 Privacy</label><select id="settingsPrivacy"><option value="public">🌍 Public (anyone can join)</option><option value="private">🔐 Private (admin approval required)</option></select></div>
+      
+      <!-- Tabs for Members and Join Requests -->
+      <div class="management-tabs">
+        <button class="tab-btn active" data-tab="members">👥 Members (<span id="memberCountBadge">0</span>)</button>
+        <button class="tab-btn" data-tab="requests">📨 Join Requests (<span id="requestsCountBadge">0</span>)</button>
+      </div>
+      
+      <!-- Members Tab Content -->
+      <div id="membersTab" class="tab-content active">
+        <div id="membersList" class="members-list"><div class="empty-state">Loading members...</div></div>
+      </div>
+      
+      <!-- Join Requests Tab Content -->
+      <div id="requestsTab" class="tab-content">
+        <div id="joinRequestsList" class="requests-list"><div class="empty-state">No pending requests</div></div>
+      </div>
+      
+      <div class="settings-actions"><button class="settings-cancel" id="cancelSettingsBtn">Cancel</button><button class="settings-save" id="saveSettingsBtn">💾 Save Changes</button></div>
+    </div>
+  </div>
+</div>
 
 <script src="{%static 'js/authentication/auth.js'%}"></script>
 <script src="{%static 'js/chat/chat_socket.js'%}"></script>
