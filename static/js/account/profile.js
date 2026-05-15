@@ -124,7 +124,6 @@ saveBtn.addEventListener("click", () => {
 
 
 
-  console.log(formData)
   changeAccount(formData)
 })
 
@@ -138,7 +137,7 @@ async function changeAccount(formData) {
   if (response.ok) {
     showToast("Changes saved")
   } else {
-    console.log(data)
+
     Object.entries(data).forEach(([key, values]) => {
       if (Array.isArray(values)) {
         values.forEach(error => {

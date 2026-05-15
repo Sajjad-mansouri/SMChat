@@ -18,7 +18,11 @@ class UserSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = UserModel
-		fields = ["id", "username", "email", "first_name", "last_name", "conversation_name", "conversation_image", "group_type", "bio", "blocklist_id"]
+		fields = [
+		"id", "username", "email", "first_name", "last_name", 
+		"conversation_name", "conversation_image", "group_type", 
+		"bio", "blocklist_id"
+		]
 		extra_kwargs = {
 			"username" : {"validators":[]},
 			"email" : {"validators":[]},
@@ -92,7 +96,11 @@ class ConversationSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Conversation
-		fields = ["conversation_id", "current_user", "image", "created_by" ,"name","conversation_name", "bio", "status", "conversation_image","last_message","created_by", "group_type", "blocklist_id"]
+		fields = [
+		"conversation_id", "current_user", "image", 
+		"created_by" ,"name","conversation_name", "bio", 
+		"status", "conversation_image","last_message","created_by", 
+		"group_type", "blocklist_id", "join_request"]
 		read_only_fields = ["conversation_id", "bio","conversation_image", "last_message", "blocklist_id"]
 
 	def get_conversation_name(self, obj):
@@ -161,7 +169,7 @@ class ConversationSerializer(serializers.ModelSerializer):
 		data = data.copy()
 		request = self.context["request"]
 		data["created_by"] = request.user.id
-		
+		data["join_request"] =  True if data["join_request"] == "true" else False
 		return super().to_internal_value(data)
 
 		return validated
@@ -170,7 +178,7 @@ class ConversationSerializer(serializers.ModelSerializer):
 		
 		return boolean
 	def create(self, validated_data):
-		
+		request = self.context["request"]
 		member_users = [validated_data["created_by"]]
 		try:
 			user_id = self.initial_data.get('member_user')
@@ -184,7 +192,10 @@ class ConversationSerializer(serializers.ModelSerializer):
 		conversation = Conversation.objects.create(**validated_data)
 		conversations = []
 		for user in member_users:
-			conversations.append(ConversationMember(conversation=conversation, user=user))
+			c = ConversationMember(conversation=conversation, user=user)
+			if user == request.user:
+				c = ConversationMember(conversation=conversation, user=user, accepted=True)
+			conversations.append(c)
 		ConversationMember.objects.bulk_create(conversations)
 		return conversation
 
@@ -286,17 +297,19 @@ class ConversationWithMessageSerializer(ConversationProfileSerializer):
 
 class ConversationMemberSerializer(serializers.ModelSerializer):
 	user = UserSerializer(read_only=True)
+	conversation_status = serializers.SerializerMethodField()
 	class Meta:
 		model = ConversationMember
-		fields = ["id","conversation", "accepted", "user"]
+		fields = ["id","conversation", "accepted", "user", "conversation_status"]
 
 
-
-	def to_internal_value(self, data):
-		data = data.copy()
+	def create(self, validated_data):
 		request = self.context["request"]
-		data["user"] = request.user.id
-		return super().to_internal_value(data)
+		validated_data["user"] = request.user
+		return super().create(validated_data)
+
+	def get_conversation_status(self, obj):
+		return obj.conversation.status
 
 
 class ConversationSettingSerializer(serializers.ModelSerializer):

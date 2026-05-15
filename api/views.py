@@ -14,7 +14,7 @@ from rest_framework.parsers import FormParser, MultiPartParser
 from . import serializers
 from chat.models import Conversation, ConversationMember, Chat, BlockList
 from account.models import Profile
-from .permissions import IsMember, IsConversationOwner
+from .permissions import IsMember, IsConversationOwner, isAcceptedUser
 
 
 UserModel = get_user_model()
@@ -24,7 +24,7 @@ class Conversations(ListAPIView):
 	def get_queryset(self):
 		conversation_type = self.kwargs.get("conversation_type")
 		q_user = Q(group_type="direct")
-		q_group_channel = (~Q(group_type="direct") & Q(members__accepted=True) & Q(status="private")) | Q(status="public")
+		q_group_channel = (~Q(group_type="direct") & Q(members__accepted=True) & Q(join_request=True)) | Q(join_request=False)
 		q_general = Q(members__user=self.request.user) 
 		g_total = ((q_user & q_general) | (q_group_channel & q_general) | Q(created_by=self.request.user))& Q(group_type=conversation_type)
 
@@ -41,7 +41,7 @@ class Conversations(ListAPIView):
 
 class ConversationDetail(RetrieveAPIView):
 	serializer_class = serializers.ConversationWithMessageSerializer
-	permission_classes = [IsAuthenticated, IsMember]
+	permission_classes = [IsAuthenticated, IsMember, isAcceptedUser]
 	def get_queryset(self):
 		self.conversation_id = self.kwargs.get("conversation_id")
 		self.user_id = self.kwargs.get("user_id")
@@ -53,7 +53,8 @@ class ConversationDetail(RetrieveAPIView):
 				return UserModel.objects.all()
 		else:
 			self.lookup_url_kwarg = "conversation_id"
-			return Conversation.objects.all()
+			q = Q(join_request=False) | (Q(join_request=True) & Q(members__accepted=True))
+			return Conversation.objects.filter().distinct()
 
 
 

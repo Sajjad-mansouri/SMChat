@@ -109,10 +109,11 @@ async function openChat(chatId = null) {
   }
 
   const response = await auth.authenticatedRequest(url, null, "GET")
+  const data = await response.json()
+
   if (response.ok) {
 
-    const data = await response.json()
-    console.log('data', data)
+
 
     document.querySelectorAll(".chat-item").forEach(element => {
       element.classList.remove("active-chat")
@@ -127,9 +128,15 @@ async function openChat(chatId = null) {
       changeRoomStatus()
     }
   } else if (response.status == 403 && ["group", "channel"].includes(conversationType)) {
+    let status = 'not accepted'
+
+    if (Object.hasOwn(data, "status") && data.status == "pending") {
+
+      status = "pending"
+    }
     const conversationName = chatItem.dataset.name;
     const conversationBio = chatItem.dataset.bio
-    createJoinLink(conversationId, conversationName, conversationType, conversationBio)
+    createJoinLink(conversationId, conversationName, conversationType, conversationBio, status)
 
   }
 
@@ -214,7 +221,6 @@ function createMessageContainer(data) {
   `
   let userInputElement = "";
   if (data.group_type == "channel") {
-    console.log(data.created_by, currentUser, typeof data.created_by, typeof currentUser, data.created_by == currentUser)
     if (data.created_by == currentUser) {
       userInputElement = inputElements
     }
@@ -256,12 +262,30 @@ function createMessageContainer(data) {
 
 }
 
-function createJoinLink(conversationId, conversationName, conversationType, conversationBio) {
+function createJoinLink(conversationId, conversationName, conversationType, conversationBio, status) {
   const app = document.querySelector(".app")
+
   let mainContent = document.querySelector(".main-content")
   if (mainContent) {
 
     mainContent.remove()
+  }
+  let joinContent = `
+        <button class="join-button "  id="joinButton" data-id="${conversationId}"  onclick="joinConversation(${conversationId}, '${conversationType}') ">
+          <svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+          Join ${conversationName}
+        </button>
+  `
+  if (status == "pending") {
+    joinContent = `
+        <button class="join-button "  id="joinButton" disabled>
+  <svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M5 2h14M5 22h14M5 2v4c0 4 3 6 7 6s7-2 7-6V2M5 22v-4c0-4 3-6 7-6s7 2 7 6v4"></path>
+  </svg>
+      Awaiting Approval
+        </button>
+
+      `
   }
 
   mainContent = `
@@ -271,10 +295,7 @@ function createJoinLink(conversationId, conversationName, conversationType, conv
         <div class="join-icon" id="joinIcon">📢</div>
         <div class="join-title" id="joinTitle">${conversationType}:${conversationName}</div>
         <div class="join-description" id="joinDescription">${conversationBio||""}</div>
-        <button class="join-button" id="joinButton" data-id="${conversationId}" onclick="joinConversation(${conversationId}, '${conversationType}') ">
-          <svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-          Join ${conversationName}
-        </button>
+        ${joinContent}
       </div>
     </div>
   </main>
@@ -290,17 +311,19 @@ async function joinConversation(conversationId, conversationType) {
   const response = await auth.authenticatedRequest(`api/membership/add/`, body, "POST")
   if (response.ok) {
     const data = await response.json()
-    if (data.accepted) {
+
+    if (data.accepted == true) {
       openNav(conversationType, () => {
         openChat(conversationId)
       })
 
     } else {
+      openNav(conversationType)
       document.getElementById("joinButton").innerHTML = `
   <svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
     <path d="M5 2h14M5 22h14M5 2v4c0 4 3 6 7 6s7-2 7-6V2M5 22v-4c0-4 3-6 7-6s7 2 7 6v4"></path>
   </svg>
-  Awaiting Approval
+      Awaiting Approval
       `
     }
   }
@@ -379,7 +402,7 @@ async function sendMessage() {
   if (conversationId == "undefined") {
     // if we dont have previous chat with this user first create conversation and add users to it then create socker
     const userId = document.getElementById("chatName").dataset.userId
-    const response = await createConversation("", "direct", "", "private", userId)
+    const response = await createConversation("", "direct", "", "private", "false", userId)
     if (response.ok) {
       const data = await response.json()
       conversationId = data.conversation_id
@@ -413,9 +436,10 @@ document.getElementById("submitCreateBtn")?.addEventListener("click", async () =
 
   const createStatusSelectValue = document.getElementById("createStatusSelect").value
   const createTypeSelectValue = document.getElementById("createTypeSelect").value
+  const createJoinRequestValue = document.getElementById("createJoinRequestSelect").value
 
   if (createNameInputValue && createTypeSelectValue) {
-    const response = await createConversation(createNameInputValue, createTypeSelectValue, createBioInputValue, createStatusSelectValue)
+    const response = await createConversation(createNameInputValue, createTypeSelectValue, createBioInputValue, createStatusSelectValue, createJoinRequestValue)
     const data = await response.json()
     const container = document.getElementById("chatsList");
     const activeNav = document.querySelector(`.nav-pill.active[data-nav="${data.group_type}"]`);
@@ -429,13 +453,14 @@ document.getElementById("submitCreateBtn")?.addEventListener("click", async () =
 document.getElementById("cancelCreateBtn")?.addEventListener("click", () => document.getElementById("createModalOverlay")?.classList.remove("active"));
 
 
-async function createConversation(createNameInputValue, createTypeSelectValue, createBioInputValue, createStatusSelectValue, userId = null) {
+async function createConversation(createNameInputValue, createTypeSelectValue, createBioInputValue, createStatusSelectValue, createJoinRequestValue, userId = null) {
   const body = JSON.stringify({
     "name": createNameInputValue,
     "bio": createBioInputValue,
     "status": createStatusSelectValue,
     "group_type": createTypeSelectValue,
-    "member_user": userId
+    "member_user": userId,
+    "join_request": createJoinRequestValue,
   })
   const response = await auth.authenticatedRequest(`api/conversation/create/`, body, "POST")
   return response
@@ -782,7 +807,7 @@ async function sendMessageWithDraft() {
     if (conversationId == "undefined") {
       // if we dont have previous chat with this user first create conversation and add users to it then create socker
       const userId = document.getElementById("chatName").dataset.userId
-      const response = await createConversation("", "direct", "", "private", userId)
+      const response = await createConversation("", "direct", "", "private", "false", userId)
       if (response.ok) {
         const data = await response.json()
         conversationId = data.conversation_id
@@ -899,7 +924,7 @@ function setSettingInputValues(data) {
 }
 
 function loadConversationMembers(data) {
-  console.log('load member', data)
+
   const membersList = document.getElementById("membersList");
   const joinRequestsList = document.getElementById("joinRequestsList")
 
@@ -921,9 +946,7 @@ function loadConversationMembers(data) {
     membersList.innerHTML = ""
 
     accepted.forEach(member => {
-      console.log(member)
-      console.log(currentUser, member.user.id, currentUser == member.user.id)
-      console.log(data.created_by, member.user.id, data.created_by == member.user.id)
+
 
       isSelf = currentUser == member.user.id
       isCreator = data.created_by == member.user.id

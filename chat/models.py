@@ -33,6 +33,7 @@ class Conversation(models.Model):
 	group_type = models.CharField(_("group type"), choices=GROUP_TYPE, max_length=10)
 	image = models.ImageField(_("image"), upload_to=group_file_path, null=True, blank=True)
 	is_active = models.BooleanField(default=True)
+	join_request = models.BooleanField(default=False)
 
 	created = models.DateTimeField(auto_now_add=True)
 	updated = models.DateTimeField(auto_now=True)

@@ -34,7 +34,7 @@ class Auth {
 	}
 
 	async fetchFormPost(method, url, body, headers = {}) {
-		console.log(method, url, body)
+
 		const response = await fetch(url, {
 			method: method,
 			headers: {
