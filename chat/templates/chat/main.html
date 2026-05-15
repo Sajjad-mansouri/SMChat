@@ -135,9 +135,10 @@
   <div class="settings-modal">
     <div class="settings-modal-header"><span>⚙️ Space Management</span><button class="close-modal-btn" id="closeSettingsBtn">✕</button></div>
     <div class="settings-modal-body">
-      <div class="settings-group"><label>📛 Space Name</label><input type="text" id="settingsSpaceName" placeholder="Enter space name"></div>
+      <div class="settings-group"><label>Name</label><input type="text" id="settingsSpaceName" placeholder="Enter Name"></div>
+      <div class="settings-group"><label>Bio</label><input type="text" id="settingsSpaceBio" placeholder="Enter Bio"></div>
       <div class="settings-group"><label>🔒 Privacy</label><select id="settingsPrivacy"><option value="public">🌍 Public (anyone can join)</option><option value="private">🔐 Private (admin approval required)</option></select></div>
-      
+      <div class="settings-group"><label>🔒 Request to Join</label><select id="settingsRequestJoin"><option value="true">True</option><option value="false">False</option></select></div>
       <!-- Tabs for Members and Join Requests -->
       <div class="management-tabs">
         <button class="tab-btn active" data-tab="members">👥 Members (<span id="memberCountBadge">0</span>)</button>

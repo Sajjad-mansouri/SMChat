@@ -101,7 +101,7 @@ class ConversationSerializer(serializers.ModelSerializer):
 		"created_by" ,"name","conversation_name", "bio", 
 		"status", "conversation_image","last_message","created_by", 
 		"group_type", "blocklist_id", "join_request"]
-		read_only_fields = ["conversation_id", "bio","conversation_image", "last_message", "blocklist_id"]
+		read_only_fields = ["conversation_id","conversation_image", "last_message", "blocklist_id"]
 
 	def get_conversation_name(self, obj):
 
@@ -170,6 +170,7 @@ class ConversationSerializer(serializers.ModelSerializer):
 		request = self.context["request"]
 		data["created_by"] = request.user.id
 		data["join_request"] =  True if data["join_request"] == "true" else False
+		print("to to_internal_value", data)
 		return super().to_internal_value(data)
 
 		return validated
@@ -178,6 +179,7 @@ class ConversationSerializer(serializers.ModelSerializer):
 		
 		return boolean
 	def create(self, validated_data):
+		validated_data["bio"] = self.initial_data.get("bio")
 		request = self.context["request"]
 		member_users = [validated_data["created_by"]]
 		try:
@@ -198,6 +200,10 @@ class ConversationSerializer(serializers.ModelSerializer):
 			conversations.append(c)
 		ConversationMember.objects.bulk_create(conversations)
 		return conversation
+
+	def update(self, instance, validated_data):
+		validated_data["bio"] = self.initial_data.get("bio")
+		return super().update(instance, validated_data)
 
 	def validate(self, data):
 		if self.instance is None:
@@ -318,7 +324,7 @@ class ConversationSettingSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Conversation
-		fields = ["id","name", "status", "members", "created_by"]
+		fields = ["id","name", "status", "members", "created_by", "join_request", "bio"]
 
 
 class BlockListSerializer(serializers.ModelSerializer):

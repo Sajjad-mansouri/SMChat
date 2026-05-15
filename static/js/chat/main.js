@@ -916,11 +916,19 @@ async function getConversationInfo(conversationId) {
 }
 
 function setSettingInputValues(data) {
+  console.log("setting values", data)
   const settingsSpaceName = document.getElementById("settingsSpaceName")
   settingsSpaceName.value = data.name
 
   const settingsPrivacy = document.getElementById("settingsPrivacy")
   settingsPrivacy.value = data.status
+
+  const settingsSpaceBio = document.getElementById("settingsSpaceBio")
+  settingsSpaceBio.value = data.bio
+
+  const settingsRequestJoin = document.getElementById("settingsRequestJoin")
+  settingsRequestJoin.value = `${data.join_request}`
+  console.log(settingsRequestJoin)
 }
 
 function loadConversationMembers(data) {
@@ -1013,11 +1021,17 @@ document.querySelectorAll(".management-tabs .tab-btn").forEach(element => {
 const saveSettingsBtn = document.getElementById("saveSettingsBtn");
 saveSettingsBtn.addEventListener("click", async () => {
 
-  const newConversationName = document.getElementById("settingsSpaceName").value;
+  const newConversationName = document.getElementById("settingsSpaceName").value.trim();
   const newConversationStatus = document.getElementById("settingsPrivacy").value;
+  const newRequestJoin = document.getElementById("settingsRequestJoin").value;
+  const newBio = document.getElementById("settingsSpaceBio").value.trim();
+
   formData = new FormData()
   formData.append("name", newConversationName)
   formData.append("status", newConversationStatus)
+  formData.append("join_request", newRequestJoin)
+  formData.append("bio", newBio)
+
 
   const conversationResponse = await auth.authenticatedRequest(`${origin}/api/conversation/${conversationId}/update/`, formData, "PATCH", {}, "multipart/form-data")
   if (conversationResponse.ok) {
