@@ -31,7 +31,7 @@ class JWTWebsocketMiddleware(BaseMiddleware):
     
     @database_sync_to_async
     def get_user_from_token(self, token):
-        print('token****',token)
+
         try:
             if not token:
                 return AnonymousUser()
@@ -47,5 +47,5 @@ class JWTWebsocketMiddleware(BaseMiddleware):
             return user
             
         except (InvalidToken, TokenError, Exception) as e:
-            print(f"JWT Authentication error: {e}")
+
             return AnonymousUser()
