@@ -80,7 +80,7 @@ let previousConversationId = null
 const currentUser = document.getElementById("drawerUsername").dataset.currentUser
 
 async function openChat(chatId = null) {
-
+  replyingTo = null
   let chatItem
   if (chatId) {
 
@@ -311,7 +311,7 @@ async function joinConversation(conversationId, conversationType) {
   const response = await auth.authenticatedRequest(`api/membership/add/`, body, "POST")
   if (response.ok) {
     const data = await response.json()
-
+    console.log("joinConversation", data)
     if (data.accepted == true) {
       openNav(conversationType, () => {
         openChat(conversationId)

@@ -196,7 +196,7 @@ class ChatClient {
 
 			} else if (data.file) {
 				messageContent = `
-      <a href = "${message.file}"
+      <a href = "${data.file}"
       download = "${data.file.split('/').pop()}"
       class = "file-attachment" >  
 

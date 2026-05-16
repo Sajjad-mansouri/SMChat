@@ -169,7 +169,7 @@ class ConversationSerializer(serializers.ModelSerializer):
 		data = data.copy()
 		request = self.context["request"]
 		data["created_by"] = request.user.id
-		data["join_request"] =  True if data["join_request"] == "true" else False
+		data["join_request"] =  True if data.get("join_request") == "true" else False
 		print("to to_internal_value", data)
 		return super().to_internal_value(data)
 
@@ -202,7 +202,8 @@ class ConversationSerializer(serializers.ModelSerializer):
 		return conversation
 
 	def update(self, instance, validated_data):
-		validated_data["bio"] = self.initial_data.get("bio")
+		instance.bio = self.initial_data.get("bio", instance.bio)
+
 		return super().update(instance, validated_data)
 
 	def validate(self, data):

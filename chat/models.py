@@ -67,7 +67,10 @@ class ConversationMember(models.Model):
 	def __str__(self):
 		return f"{self.user} in {self.conversation}"
 
-
+	def save(self, *args, **kwargs):
+		if self.conversation.join_request==False and self.conversation.status == "public":
+			self.accepted = True
+		super().save(*args, **kwargs)
 	class Meta:
 		constraints = [
 			models.UniqueConstraint(

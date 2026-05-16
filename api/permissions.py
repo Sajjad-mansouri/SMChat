@@ -23,24 +23,24 @@ class IsConversationOwner(permissions.BasePermission):
 
 class isAcceptedUser(permissions.BasePermission):
 	def has_object_permission(self, request, view, obj):
-		print('obj in isaccepteduser',obj)
-		if obj.join_request:
-			q1 = Q(user=request.user)
-			q2 = Q(accepted=True)
-			q = (q1 & q2) 
-			if obj.created_by == request.user:
-				return True
-			else:
-				if request.user.id in obj.members.values_list("user", flat=True):
-					self.message = {
-					    'detail': 'Permission required',
-					    'status': 'pending'
-					}
+		if hasattr(obj, "group_type"):
+			if obj.join_request and obj.status=="public":
+				q1 = Q(user=request.user)
+				q2 = Q(accepted=True)
+				q = (q1 & q2) 
+				if obj.created_by == request.user :
+					return True
 				else:
-					self.message = {
-					    'detail': 'Permission required',
-					    'status': 'not accepted'
-					}	
-				return obj.members.filter(q).exists()
-		else:
-			return True
+					if request.user.id in obj.members.values_list("user", flat=True):
+						self.message = {
+						    'detail': 'Permission required',
+						    'status': 'pending'
+						}
+					else:
+						self.message = {
+						    'detail': 'Permission required',
+						    'status': 'not accepted'
+						}	
+					return obj.members.filter(q).exists()
+		
+		return True
