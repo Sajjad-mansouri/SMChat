@@ -106,7 +106,7 @@
             color: red;
             font-size: 13px;
             margin-bottom: 10px;
-
+            display: none;
         }
     </style>
 </head>
@@ -118,9 +118,9 @@
     <div class="brand">SMchat</div>
     <div class="subtitle">Welcome back! Log in to continue.</div>
 
-    {%if form.errors%}
+
     <div id="errorBox" class="error">Invalid email or password.</div>
-    {%endif%}
+
 
     <form id="loginForm" method="POST">
         {%csrf_token%}
@@ -154,10 +154,11 @@ async function login() {
 
     const auth = new Auth()
     const data = await auth.login(username, password)
-    console.log(data)
-    console.log("*****")
+
     if(data.ok){
         window.location.href="{%url 'chat:index'%}"
+    }else{
+        document.getElementById("errorBox").style.display = "block"
     }
     
 

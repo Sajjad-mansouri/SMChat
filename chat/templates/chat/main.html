@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>SMChat — Premium Messenger2</title>
+  <title>SMChat</title>
   <link rel="stylesheet" type="text/css" href="{%static 'css/chat/main.css'%}">
 </head>
 <body>
@@ -41,8 +41,8 @@
 <div class="drawer" id="drawerMenu">
   <div class="drawer-profile">
     <div class="drawer-avatar" id="drawerAvatarImg"><img src="{{request.user.profile.get_image}}" alt="{{request.user.username}}"></div>
-    <div class="drawer-username" id="drawerUsername" data-current-user={{request.user.id}}></div>
-    <input type="file" id="avatarUploadInput" style="display:none" accept="image/*">
+    <div class="drawer-username" id="drawerUsername" data-current-user={{request.user.id}}>@{{request.user.username}}</div>
+    <div class="display-name" id="display-name" >{{request.user.get_display_name}}</div>
   </div>
   <div class="drawer-divider"></div>
   <div class="drawer-links">

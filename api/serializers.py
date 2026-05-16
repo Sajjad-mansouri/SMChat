@@ -29,7 +29,12 @@ class UserSerializer(serializers.ModelSerializer):
 
 		}
 	def get_conversation_name(self, obj):
-			return obj.username
+			if obj.first_name:
+				return obj.get_full_name()
+			elif obj.username:
+				return obj.username
+			else:
+				return obj.email
 
 	def get_conversation_image(self, obj):
 			
@@ -108,7 +113,14 @@ class ConversationSerializer(serializers.ModelSerializer):
 		if obj.group_type == "direct":
 			
 			obj = self.add_member(obj)
-			return [other_user.email for other_user in obj.other_users]
+			for other_user in obj.other_users:
+				if other_user.first_name:
+					return other_user.get_full_name()
+				elif other_user.username:
+					return other_user.username
+				else:
+					return other_user.email
+
 
 		else:
 			return obj.name
@@ -221,6 +233,8 @@ class ConversationSerializer(serializers.ModelSerializer):
 class ConversationProfileSerializer(serializers.ModelSerializer):
 	current_user = serializers.SerializerMethodField()
 	conversation_name = serializers.SerializerMethodField()
+	username = serializers.SerializerMethodField()
+
 	conversation_id = serializers.SerializerMethodField()
 	bio = serializers.SerializerMethodField()
 	members = serializers.SerializerMethodField()
@@ -233,7 +247,9 @@ class ConversationProfileSerializer(serializers.ModelSerializer):
 		fields = [
 		"created_by", "group_type", "bio","members","blocklist_id",
 		"name", "conversation_image", "current_user", 
-		"conversation_id", "conversation_name", "current_user_member_id"]
+		"conversation_id", "conversation_name", "current_user_member_id",
+		"username"
+		]
 
 	def get_current_user(self, obj):
 		request = self.context["request"]
@@ -241,16 +257,26 @@ class ConversationProfileSerializer(serializers.ModelSerializer):
 
 	def get_conversation_name(self, obj):
 		if obj.group_type == "direct":
-			if isinstance(obj, UserModel):
-				return obj.username
-
 			other_user = self.get_direct_other_user(obj)
 			if other_user:
-
-				return other_user.username
+				if other_user.first_name:
+					return other_user.get_full_name()
+				elif other_user.username:
+					return other_user.username
+				else:
+					return other_user.email
 		else:
 			return obj.name
 
+	def get_username(self, obj):
+		if obj.group_type == "direct":
+			other_user = self.get_direct_other_user(obj)
+			if other_user.first_name:
+				return other_user.username
+			else:
+				return ""
+		else:
+			return ""
 	def get_current_user_member_id(self, obj):
 		request = self.context["request"]
 		if ConversationMember.objects.filter(conversation=obj, user=request.user).exists():

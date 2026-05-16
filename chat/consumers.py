@@ -78,8 +78,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 	async def send_group_message(self, message):
 			message["sender_id"] = self.user.id
 			message["sender_username"] = self.user.username
-			print("sender_id", self.user.id, "sender_username",self.user.username,"group_name", self.group_name)
-			print("message in send_group_message method:",message)
+
 			self.group_name = f"chat_{message['conversationId']}"
 			await self.channel_layer.group_send(
 				self.group_name,{

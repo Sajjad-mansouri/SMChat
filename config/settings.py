@@ -84,8 +84,12 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': config('ENGINE'),
-        'NAME': config('NAME'),
+        'ENGINE': config('DATABASAE_ENGINE'),
+        'NAME': config('DATABASAE_NAME'),
+        'USER': config('DATABASAE_USER'),
+        'PASSWORD': config('DATABASAE_PASSWORD'),
+        'HOST': config('DATABASAE_HOST'),
+        'PORT': config('DATABASAE_PORT'),       
     }
 }
 
@@ -158,7 +162,7 @@ SIMPLE_JWT = {
 
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8000",  # Your frontend URL
+    "http://localhost:8000",  
     "http://127.0.0.1:8000",
 ]
 

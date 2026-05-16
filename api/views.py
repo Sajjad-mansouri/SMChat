@@ -110,12 +110,18 @@ class SearchView(APIView):
 		search_param = self.request.query_params.get("search")
 		user_q = Q(username__icontains=search_param) 
 		exclude_q = Q(user_block_list__blocked_user=self.request.user) 
+
 		users = UserModel.objects.filter(user_q).exclude(exclude_q).exclude(username=self.request.user.username).distinct()
 
+		user_q_conversation = Q(group_type="direct") & Q(members__user=self.request.user)
+		user2_q_conversation = Q(members__user__in=users)
+		user_conversations = Conversation.objects.filter(user_q_conversation).filter(user2_q_conversation)
+		users = users.exclude(conversation_members__conversation__in=user_conversations)
 
 		conversation_q = Q(status="public") & Q(name__icontains=search_param) & Q(group_type__in=["channel", "group"])
 		exclude_conversation_q = Q(blocklist__user=self.request.user) 
 		conversations = Conversation.objects.filter(conversation_q).exclude(exclude_conversation_q)
+
 
 		return users, conversations
 

@@ -46,7 +46,7 @@ async function getConversation(dataNav, callback = null) {
   }
   const data = await response.json()
   data.forEach(item => {
-    console.log("conversation", data)
+
     populateNavConversations(container, item)
   })
 
@@ -312,7 +312,7 @@ async function joinConversation(conversationId, conversationType) {
   const response = await auth.authenticatedRequest(`api/membership/add/`, body, "POST")
   if (response.ok) {
     const data = await response.json()
-    console.log("joinConversation", data)
+
     if (data.accepted == true) {
       openNav(conversationType, () => {
         openChat(conversationId)
@@ -472,27 +472,32 @@ async function addToMembership() {
 
 
 }
-
+let currentRequestId = 0;
 document.getElementById("globalSearch").addEventListener("input", async (event) => {
   const container = document.getElementById("chatsList");
   container.innerText = ""
   search = event.target.value.trim()
 
   if (search != "") {
-
+    const thisRequestId = ++currentRequestId;
     const response = await auth.authenticatedRequest(`api/search/?search=${search}`, null, "GET")
     const data = await response.json()
-    document.querySelectorAll(".nav-pill").forEach(element => {
-      element.classList.add("hidden")
-    })
-    document.querySelector(".search-nav").classList.remove("hidden")
-    Object.entries(data).forEach(([key, values]) => {
-      values.forEach(value => {
-        populateNavConversations(container, value)
+    if (thisRequestId === currentRequestId) {
+      document.querySelectorAll(".nav-pill").forEach(element => {
+        element.classList.add("hidden")
+      })
+      document.querySelector(".search-nav").classList.remove("hidden")
+
+      Object.entries(data).forEach(([key, values]) => {
+        values.forEach(value => {
+          populateNavConversations(container, value)
+
+        })
 
       })
 
-    })
+    }
+
   } else {
 
     openNav("direct")
@@ -566,7 +571,7 @@ async function openUserProfile() {
   let changeImageSpan = ""
   let conversationSettingEle = ""
   let threeDotContent = ""
-  console.log("currentUser != data.created_by", currentUser, data.created_by)
+
 
   if (conversationType == "direct") {
 
@@ -590,7 +595,7 @@ async function openUserProfile() {
 `
   } else {
     if (currentUser != data.created_by) {
-      console.log("data that  used for leave conversation:", data)
+
       threeDotContent = `
           <button class="three-dots-btn" id="threeDotsBtn" onclick = "openThreeDot()">
             <svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
@@ -612,6 +617,7 @@ async function openUserProfile() {
     conversationSettingEle = `<div ><button class="header-settings-btn" id="chatSettingsBtn" onclick="conversationSetting('${conversationId}')">⚙️</button></div>`
   }
 
+
   const memberDiv = conversationType == "direct" ? "" : `<div class="profile-modal-members" id="modalMembers">${data.members} subscribers</div>`
   const modalContent = `
   <div class="profile-modal">
@@ -624,9 +630,11 @@ async function openUserProfile() {
 
       </div>
       <div class="profile-modal-name" id="modalName">${data.conversation_name}</div>
+      <div class="profile-modal-username" id="modalUsername">${data.username}</div>
       ${memberDiv}
     </div>
     <div class="profile-modal-body">
+
       <div class="profile-bio">
         <div class="profile-bio-label">📝 Bio</div>
         <div class="profile-bio-text" id="modalBio">${data.bio}</div>
@@ -947,7 +955,7 @@ async function getConversationInfo(conversationId) {
 }
 
 function setSettingInputValues(data) {
-  console.log("setting values", data)
+
   const settingsSpaceName = document.getElementById("settingsSpaceName")
   settingsSpaceName.value = data.name
 
@@ -959,7 +967,7 @@ function setSettingInputValues(data) {
 
   const settingsRequestJoin = document.getElementById("settingsRequestJoin")
   settingsRequestJoin.value = `${data.join_request}`
-  console.log(settingsRequestJoin)
+
 }
 
 function loadConversationMembers(data) {
@@ -1175,7 +1183,7 @@ let pendingLeavingConversation = null;
 async function leaveConversation(conversationType, memberId) {
 
   showLeaveConfirmation(async () => {
-    console.log('request to leave')
+
     const url = `${origin}/api/membership/${memberId}/delete/`;
     const body = ""
     const response = await auth.authenticatedRequest(url, body, "DELETE", {})

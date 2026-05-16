@@ -4,7 +4,6 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import AbstractUser
 
 
-
 class User(AbstractUser):
 	email = models.EmailField(_("email address"), blank=True, unique=True)
 	username = models.CharField(_("username"), max_length=150)
@@ -24,6 +23,14 @@ class User(AbstractUser):
 					name="unique_username"
 				)
 		]
+
+	def get_display_name(self):
+		if self.first_name or self.last_name:
+			return self.get_full_name()
+		elif self.username:
+			return self.username
+		else:
+			return self.email
 
 class Profile(models.Model):
 
@@ -45,3 +52,9 @@ class Profile(models.Model):
 			return self.profile_image.url
 		else:
 			return ""
+
+	def save(self, *args, **kwargs):
+		if not self.profile_image:
+			self.profile_image = '/default/default_user.jpeg'
+
+		super().save(*args, **kwargs)

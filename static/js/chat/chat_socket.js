@@ -142,7 +142,7 @@ class ChatClient {
 	}
 
 	handleMessage(data) {
-		console.log("***handleMessage method***", "user", this.currentUserId, "data", data)
+
 		if (data.messageType == "status_notif") {
 
 			this.changeChatStatus(data)
@@ -241,7 +241,7 @@ class ChatClient {
 
 	changeChatStatus(data) {
 
-		console.log("changeChatStatus", data.sender_id, this.currentUserId)
+
 		if (data.sender_id != this.currentUserId) {
 
 			const chatStatus = document.querySelector(`.chat-status[data-conversation-id="${data.conversationId}"]`);
