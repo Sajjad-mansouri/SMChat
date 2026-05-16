@@ -46,6 +46,7 @@ async function getConversation(dataNav, callback = null) {
   }
   const data = await response.json()
   data.forEach(item => {
+    console.log("conversation", data)
     populateNavConversations(container, item)
   })
 
@@ -564,7 +565,47 @@ async function openUserProfile() {
   const blocklistID = data.blocklist_id
   let changeImageSpan = ""
   let conversationSettingEle = ""
+  let threeDotContent = ""
+  console.log("currentUser != data.created_by", currentUser, data.created_by)
 
+  if (conversationType == "direct") {
+
+    blockUnblockContent = `
+            <div class="dropdown-item" id="blockUserBtn" onclick="blockConversation('${data.conversation_name}',${data.conversation_id}, ${data.id}, ${data.blocklist_id}, true)">
+              <svg width="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M4 4l16 16"/></svg>
+              ${data.blocklist_id!= null ?"UnBlock":"Block"} User
+            </div>
+`
+
+    threeDotContent = `
+          <button class="three-dots-btn" id="threeDotsBtn" onclick = "openThreeDot()">
+            <svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+          </button>
+
+          <div class="dropdown-menu" id="dropdownMenu" >
+          ${blockUnblockContent}
+
+          </div>
+
+`
+  } else {
+    if (currentUser != data.created_by) {
+      console.log("data that  used for leave conversation:", data)
+      threeDotContent = `
+          <button class="three-dots-btn" id="threeDotsBtn" onclick = "openThreeDot()">
+            <svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+          </button>
+          <div class="dropdown-menu" id="dropdownMenu" >
+              <div class="dropdown-item" id="LeaveBtn" onclick="leaveConversation('${conversationType}', '${data.current_user_member_id}')">
+                Leave 
+              </div>
+
+
+          </div>
+
+`
+    }
+  }
   if (currentUser == data.created_by && conversationType != "direct") {
 
     changeImageSpan = `<span onclick= "changeConversationAvatar('${conversationType}', ${conversationId})">change</span>`
@@ -596,17 +637,7 @@ async function openUserProfile() {
           Send Message
         </button>
         <div style="position: relative;display:flex">
-          <button class="three-dots-btn" id="threeDotsBtn" onclick = "openThreeDot()">
-            <svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
-          </button>
-
-          <div class="dropdown-menu" id="dropdownMenu" >
-            <div class="dropdown-item" id="blockUserBtn" onclick="blockConversation('${data.conversation_name}',${data.conversation_id}, ${data.id}, ${data.blocklist_id}, true)">
-              <svg width="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M4 4l16 16"/></svg>
-              ${data.blocklist_id!= null ?"UnBlock":"Block"} User
-            </div>
-
-          </div>
+        ${threeDotContent}
         </div>
             ${conversationSettingEle}
       </div>
@@ -1137,3 +1168,62 @@ function closeConfirm() {
   document.getElementById('confirmModalOverlay').classList.remove('active');
   pendingConfirmCallback = null;
 }
+
+
+
+let pendingLeavingConversation = null;
+async function leaveConversation(conversationType, memberId) {
+
+  showLeaveConfirmation(async () => {
+    console.log('request to leave')
+    const url = `${origin}/api/membership/${memberId}/delete/`;
+    const body = ""
+    const response = await auth.authenticatedRequest(url, body, "DELETE", {})
+    if (response.ok) {
+      showToast(`leave successfully!`, 'success');
+      closeProfileModal();
+      let mainContent = document.querySelector(".main-content")
+      if (mainContent) {
+
+        mainContent.remove()
+      }
+      closeConfirmModal()
+      openNav(conversationType)
+    } else {
+      showToast(`Failed to leave please try later!`, 'error');
+
+
+    }
+
+  })
+
+
+
+}
+
+
+function showLeaveConfirmation(onConfirm) {
+  const modal = document.getElementById("leaveConfirmModalOverlay");
+  const confirmationBtn = document.getElementById("confirmLeaveBtn")
+  modal.classList.add("active")
+  pendingLeavingConversation = onConfirm
+
+}
+
+document.getElementById("leaveConfirmModalOverlay").addEventListener("click", (e) => {
+  if (e.target === document.getElementById("leaveConfirmModalOverlay")) {
+    closeConfirmModal();
+  }
+});
+document.getElementById("leaveCancelBtn").addEventListener("click", closeConfirmModal);
+
+function closeConfirmModal() {
+  document.getElementById("leaveConfirmModalOverlay").classList.remove("active");
+
+}
+
+document.getElementById("confirmLeaveBtn").addEventListener("click", () => {
+  if (pendingLeavingConversation) {
+    pendingLeavingConversation()
+  }
+})

@@ -92,7 +92,7 @@ class ConversationSerializer(serializers.ModelSerializer):
 	current_user = serializers.SerializerMethodField()
 	bio = serializers.SerializerMethodField()
 	blocklist_id = serializers.SerializerMethodField()
-
+	
 
 	class Meta:
 		model = Conversation
@@ -141,6 +141,7 @@ class ConversationSerializer(serializers.ModelSerializer):
 		request = self.context["request"]
 		return request.user.id
 
+
 	def get_bio(self, obj):
 		if obj.group_type == "direct":
 			obj = self.add_member(obj)
@@ -160,7 +161,8 @@ class ConversationSerializer(serializers.ModelSerializer):
 		request = self.context["request"]
 		try:
 			other_user = self.get_direct_other_user(obj)
-			q = (Q(user=request.user) & Q(conversation=obj))|(Q(user=request.user) & Q(blocked_user=other_user))
+
+			q = (Q(user=request.user) & Q(conversation=obj))|(Q(user=request.user) & Q(blocked_user=other_user) & Q(conversation=None))
 			return BlockList.objects.get(q).id
 		except BlockList.DoesNotExist:
 			return None
@@ -170,7 +172,7 @@ class ConversationSerializer(serializers.ModelSerializer):
 		request = self.context["request"]
 		data["created_by"] = request.user.id
 		data["join_request"] =  True if data.get("join_request") == "true" else False
-		print("to to_internal_value", data)
+
 		return super().to_internal_value(data)
 
 		return validated
@@ -224,14 +226,14 @@ class ConversationProfileSerializer(serializers.ModelSerializer):
 	members = serializers.SerializerMethodField()
 	conversation_image = serializers.SerializerMethodField()
 	blocklist_id = serializers.SerializerMethodField()
-
+	current_user_member_id = serializers.SerializerMethodField()
 
 	class Meta:
 		model = Conversation
 		fields = [
 		"created_by", "group_type", "bio","members","blocklist_id",
 		"name", "conversation_image", "current_user", 
-		"conversation_id", "conversation_name"]
+		"conversation_id", "conversation_name", "current_user_member_id"]
 
 	def get_current_user(self, obj):
 		request = self.context["request"]
@@ -248,6 +250,13 @@ class ConversationProfileSerializer(serializers.ModelSerializer):
 				return other_user.username
 		else:
 			return obj.name
+
+	def get_current_user_member_id(self, obj):
+		request = self.context["request"]
+		if ConversationMember.objects.filter(conversation=obj, user=request.user).exists():
+			return ConversationMember.objects.get(conversation=obj, user=request.user).id
+		else:
+			return ""
 
 	def get_direct_other_user(self, obj):
 		request = self.context["request"]
@@ -287,7 +296,7 @@ class ConversationProfileSerializer(serializers.ModelSerializer):
 		request = self.context["request"]
 		try:
 			other_user = self.get_direct_other_user(obj)
-			q = (Q(user=request.user) & Q(conversation=obj))|(Q(user=request.user) & Q(blocked_user=other_user))
+			q = (Q(user=request.user) & Q(conversation=obj))|(Q(user=request.user) & Q(blocked_user=other_user) & Q(conversation=None))
 			return BlockList.objects.get(q).id
 		except BlockList.DoesNotExist:
 			return None

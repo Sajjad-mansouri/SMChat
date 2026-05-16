@@ -5,7 +5,10 @@ from .models import Conversation, Chat, ConversationMember, BlockList
 class ConversationAdmin(admin.ModelAdmin):
 	list_display = ["name", "id", "created_by"]
 admin.site.register(Chat)
-admin.site.register(ConversationMember)
+
+@admin.register(ConversationMember)
+class ConversationMemberAdmin(admin.ModelAdmin):
+	list_display = ["user", "id","conversation", "joined_at"]
 
 @admin.register(BlockList)
 class ConversationAdmin(admin.ModelAdmin):

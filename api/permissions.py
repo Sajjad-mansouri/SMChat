@@ -13,6 +13,11 @@ class IsMember(permissions.BasePermission):
 			return True
 
 
+class RemoveMembershipPermission(permissions.BasePermission):
+	def has_object_permission(self, request, view, obj):
+
+		return obj.conversation.created_by == request.user or obj.user == request.user
+
 class IsConversationOwner(permissions.BasePermission):
 	def has_object_permission(self, request, view, obj):
 		if isinstance(obj, Conversation):

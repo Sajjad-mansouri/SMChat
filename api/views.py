@@ -14,7 +14,7 @@ from rest_framework.parsers import FormParser, MultiPartParser
 from . import serializers
 from chat.models import Conversation, ConversationMember, Chat, BlockList
 from account.models import Profile
-from .permissions import IsMember, IsConversationOwner, isAcceptedUser
+from .permissions import IsMember, IsConversationOwner, isAcceptedUser, RemoveMembershipPermission
 
 
 UserModel = get_user_model()
@@ -145,7 +145,7 @@ class MembershipUpdateView(UpdateAPIView):
 		return ConversationMember.objects.all()
 class MembershipDeleteView(DestroyAPIView):
 	serializer_class = serializers.ConversationMemberSerializer
-	permission_classes = [IsAuthenticated, IsConversationOwner]
+	permission_classes = [IsAuthenticated, RemoveMembershipPermission]
 	def get_queryset(self):
 		return ConversationMember.objects.all()
 
