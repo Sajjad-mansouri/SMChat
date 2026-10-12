@@ -34,12 +34,12 @@ class PasswordContextMixin:
         return context
 
 class RegistrationView(CreateView):
-    email_template_name = "account/registration/registration_email.html"
+    email_template_name = "account/registration/registration_email.txt"
     extra_email_context = None
     response_type = "JSON"
     form_class = UserRegistrationForm
     from_email = None
-    html_email_template_name = None
+    html_email_template_name = "account/registration/registration_email.html"
     subject_template_name = "account/registration/registration_subject.txt"
     success_url = reverse_lazy("account:registration_done")
     template_name = "account/registration/register.html"
