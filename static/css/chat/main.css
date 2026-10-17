@@ -156,6 +156,7 @@
     }
 
     .chat-avatar img{
+      border: 1px solid #eef2ff;
       width: 52px;
       height: 52px;
       border-radius: 32px;
@@ -250,6 +251,7 @@
       flex-shrink: 0;
     }
     .header-avatar img{
+      border: 1px solid #eef2ff;
       width: 52px;
       height: 52px;
       border-radius: 32px;
@@ -784,9 +786,9 @@
       background-position: center;
     }
     .drawer-avatar img{
-width: 120px;
-  height: 120px;
-  border-radius: 60px;
+width: 100px;
+  height: 100px;
+  border-radius: 50px;
   object-fit: cover;
   background: linear-gradient(145deg, #2563eb, #3b82f6);
   box-shadow: 0 12px 24px -10px rgba(37, 99, 235, 0.3);
