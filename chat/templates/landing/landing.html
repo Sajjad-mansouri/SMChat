@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMChat · real‑time conversations</title>
+  <!-- Font Awesome 6 (free) for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    /* ----- RESET & BASE ----- */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      background: #f9fafc;
+      color: #1e293b;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ----- HEADER / NAV ----- */
+    header {
+      background: #ffffff;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+      padding: 16px 0;
+      border-bottom: 1px solid #e9eef3;
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.7rem;
+      letter-spacing: -0.03em;
+      color: #0f172a;
+    }
+
+    .logo i {
+      color: #2b7a4b;
+      font-size: 2rem;
+    }
+
+    .logo span {
+      background: linear-gradient(135deg, #1e3c2c, #2b7a4b);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .btn-chat {
+      background: #2b7a4b;
+      color: white;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 60px;
+      font-weight: 600;
+      font-size: 1rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      box-shadow: 0 8px 18px -6px rgba(43, 122, 75, 0.3);
+    }
+
+    .btn-chat i {
+      font-size: 1rem;
+    }
+
+    .btn-chat:hover {
+      background: #1f5e39;
+      transform: translateY(-2px);
+      box-shadow: 0 14px 22px -8px rgba(43, 122, 75, 0.4);
+    }
+
+    /* ----- HERO ----- */
+    .hero {
+      padding: 80px 0 60px;
+      background: linear-gradient(145deg, #ffffff 0%, #f2f7f4 100%);
+      border-bottom: 1px solid #e2e9e2;
+    }
+
+    .hero-content {
+      max-width: 750px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .hero h1 {
+      font-size: 3.2rem;
+      font-weight: 800;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      color: #0b1f16;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 i {
+      color: #2b7a4b;
+      font-size: 2.8rem;
+      margin-right: 6px;
+    }
+
+    .hero p {
+      font-size: 1.25rem;
+      color: #2d3f36;
+      margin-bottom: 36px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .btn-hero {
+      background: #2b7a4b;
+      color: white;
+      border: none;
+      padding: 16px 44px;
+      border-radius: 60px;
+      font-weight: 600;
+      font-size: 1.2rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      box-shadow: 0 12px 24px -8px rgba(43, 122, 75, 0.4);
+    }
+
+    .btn-hero i {
+      font-size: 1.2rem;
+    }
+
+    .btn-hero:hover {
+      background: #1f5e39;
+      transform: scale(1.02);
+    }
+
+    /* ----- FEATURES SECTION ----- */
+    .features {
+      padding: 70px 0;
+      background: #ffffff;
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    .section-sub {
+      text-align: center;
+      font-size: 1.15rem;
+      color: #4b5e54;
+      max-width: 680px;
+      margin: 0 auto 56px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+      gap: 30px;
+    }
+
+    .feature-card {
+      background: #ffffff;
+      border: 1px solid #e2eae5;
+      border-radius: 28px;
+      padding: 32px 24px;
+      transition: all 0.2s ease;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.02);
+    }
+
+    .feature-card:hover {
+      border-color: #bcd9cb;
+      box-shadow: 0 20px 30px -12px rgba(43, 122, 75, 0.12);
+      transform: translateY(-4px);
+    }
+
+    .feature-icon {
+      background: #e7f3ed;
+      width: 56px;
+      height: 56px;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+
+    .feature-icon i {
+      font-size: 26px;
+      color: #2b7a4b;
+    }
+
+    .feature-card h3 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: #0f172a;
+    }
+
+    .feature-card p {
+      color: #4b5e54;
+      font-size: 0.98rem;
+      line-height: 1.6;
+    }
+
+    /* ----- DETAIL / TECH STRIP ----- */
+    .tech-strip {
+      background: #f2f7f4;
+      padding: 50px 0;
+      border-top: 1px solid #dde9e2;
+      border-bottom: 1px solid #dde9e2;
+    }
+
+    .tech-inner {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 32px 48px;
+    }
+
+    .tech-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 500;
+      color: #1f3b2e;
+      font-size: 1.05rem;
+    }
+
+    .tech-item i {
+      font-size: 1.7rem;
+      color: #2b7a4b;
+      width: 32px;
+      text-align: center;
+    }
+
+    /* ----- CTA SECTION (second chat button) ----- */
+    .cta-section {
+      padding: 70px 0;
+      background: #ffffff;
+    }
+
+    .cta-box {
+      background: linear-gradient(135deg, #e7f3ed 0%, #d6e8df 100%);
+      border-radius: 48px;
+      padding: 60px 40px;
+      text-align: center;
+      border: 1px solid #c2dbcf;
+    }
+
+    .cta-box h2 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #0b1f16;
+      margin-bottom: 16px;
+    }
+
+    .cta-box p {
+      font-size: 1.2rem;
+      color: #284433;
+      max-width: 540px;
+      margin: 0 auto 36px;
+    }
+
+    /* ----- FOOTER ----- */
+    footer {
+      background: #0f1c16;
+      color: #b9d4c7;
+      padding: 40px 0;
+      text-align: center;
+      font-size: 0.95rem;
+    }
+
+    footer i {
+      color: #86b9a0;
+      margin: 0 4px;
+    }
+
+    footer a {
+      color: #b9d4c7;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    footer a:hover {
+      color: white;
+    }
+
+    /* ----- RESPONSIVE ----- */
+    @media (max-width: 700px) {
+      .hero h1 {
+        font-size: 2.3rem;
+      }
+      .hero p {
+        font-size: 1.1rem;
+      }
+      .btn-hero {
+        padding: 14px 32px;
+        font-size: 1.1rem;
+      }
+      .btn-chat {
+        padding: 10px 22px;
+        font-size: 0.95rem;
+      }
+      .logo {
+        font-size: 1.5rem;
+      }
+      .logo i {
+        font-size: 1.7rem;
+      }
+      .section-title {
+        font-size: 1.9rem;
+      }
+      .cta-box h2 {
+        font-size: 1.8rem;
+      }
+      .cta-box {
+        padding: 40px 24px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .header-inner {
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      .hero {
+        padding: 50px 0 40px;
+      }
+      .hero h1 {
+        font-size: 1.9rem;
+      }
+      .tech-inner {
+        gap: 20px;
+      }
+      .tech-item {
+        font-size: 0.95rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER with logo + start chat button (login) -->
+  <header>
+    <div class="container header-inner">
+      <div class="logo">
+        <i class="fas fa-comment-dots"></i>
+        <span>SMChat</span>
+      </div>
+      <a href="/account/login/" class="btn-chat">
+        <i class="fas fa-arrow-right-to-bracket"></i> Start Chat
+      </a>
+    </div>
+  </header>
+
+  <!-- HERO section with primary call-to-action -->
+  <section class="hero">
+    <div class="container hero-content">
+      <h1>
+        <i class="fas fa-comment-dots"></i> 
+        Real‑time conversations,<br>built for your people.
+      </h1>
+      <p>
+        SMChat brings direct messages, groups, and channels together — 
+        powered by Django Channels, WebSockets, and JWT.
+      </p>
+      <a href="/account/login/" class="btn-hero">
+        <i class="fas fa-rocket"></i> Start Chat
+      </a>
+    </div>
+  </section>
+
+  <!-- FEATURES GRID -->
+  <section class="features">
+    <div class="container">
+      <h2 class="section-title">Everything you need to stay connected</h2>
+      <p class="section-sub">
+        SMChat includes account management, real‑time messaging, group roles, 
+        and a clean API — all in one place.
+      </p>
+
+      <div class="features-grid">
+        <!-- Account management -->
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="fas fa-id-card"></i>
+          </div>
+          <h3>Accounts & profiles</h3>
+          <p>Email‑based sign‑up, activation, password reset, profile images, and account deletion. Full JWT support.</p>
+        </div>
+
+        <!-- Direct & group conversations -->
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <h3>Direct, groups & channels</h3>
+          <p>Private one‑on‑one chats, public or private groups with role‑based memberships, and broadcast‑style channels.</p>
+        </div>
+
+        <!-- Real-time messaging -->
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="fas fa-bolt"></i>
+          </div>
+          <h3>WebSocket messaging</h3>
+          <p>Instant message delivery over Django Channels. Replies, file and image attachments, read tracking, and upload progress.</p>
+        </div>
+
+        <!-- Membership & moderation -->
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="fas fa-user-shield"></i>
+          </div>
+          <h3>Membership & blocking</h3>
+          <p>Owner / admin / member roles, join requests, block‑list enforcement, and object‑level permissions.</p>
+        </div>
+
+        <!-- Search & discovery -->
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="fas fa-magnifying-glass"></i>
+          </div>
+          <h3>User & group search</h3>
+          <p>Search users by username, and find public groups and channels by name. Excludes yourself from results.</p>
+        </div>
+
+        <!-- API & auth -->
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="fas fa-code"></i>
+          </div>
+          <h3>REST API + JWT</h3>
+          <p>Django REST Framework endpoints, token obtain/refresh, and custom JWT middleware for WebSocket authentication.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TECH STACK STRIP -->
+  <section class="tech-strip">
+    <div class="container tech-inner">
+      <div class="tech-item">
+        <i class="fab fa-python"></i> Django 5.2
+      </div>
+      <div class="tech-item">
+        <i class="fas fa-plug"></i> Django Channels
+      </div>
+      <div class="tech-item">
+        <i class="fas fa-lock"></i> JWT Auth
+      </div>
+      <div class="tech-item">
+        <i class="fas fa-database"></i> SQLite
+      </div>
+      <div class="tech-item">
+        <i class="fas fa-bolt"></i> Daphne ASGI
+      </div>
+      <div class="tech-item">
+        <i class="fas fa-cloud"></i> WebSockets
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA with START CHAT button (login) -->
+  <section class="cta-section">
+    <div class="container">
+      <div class="cta-box">
+        <h2>Ready to jump in?</h2>
+        <p>Log in and start messaging – direct chats, groups, and channels are waiting.</p>
+        <a href="/account/login/" class="btn-hero" style="background: #1f5e39;">
+          <i class="fas fa-comment"></i> Start Chat
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER (no contact section, just project note) -->
+  <footer>
+    <div class="container">
+      <p>
+        <i class="fas fa-comment-dots"></i> SMChat · local development · 
+        built with Django, Channels & DRF
+      </p>
+      <p style="margin-top: 12px; font-size: 0.85rem; opacity: 0.7;">
+        <i class="fas fa-code"></i> API endpoints available under /api/ · 
+        <i class="fas fa-lock"></i> JWT protected
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>
